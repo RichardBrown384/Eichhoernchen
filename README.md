@@ -100,6 +100,7 @@ Archimedes relies on the following libraries and the authors would like to expre
 4. [libzip][libzip]
 5. [argparse][argparse]
 6. [spdlog][spdlog]
+7. [fmtlib][fmtlib]
 
 ---
 [riscos-com]: https://riscos.com/emulation/index.php
@@ -109,6 +110,7 @@ Archimedes relies on the following libraries and the authors would like to expre
 [libzip]: https://github.com/madler/zlib.git
 [argparse]: https://github.com/p-ranav/argparse
 [spdlog]: https://github.com/gabime/spdlog.git
+[fmtlib]: https://github.com/fmtlib/fmt.git
 [iss2]: https://github.com/RichardBrown384/archimedes/issues/2
 [iss9]: https://github.com/RichardBrown384/archimedes/issues/9
 [iss16]: https://github.com/RichardBrown384/archimedes/issues/16
