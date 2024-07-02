@@ -76,7 +76,7 @@ Once in the desktop:
 1. Click on Apps (bottom left)
 2. Double-click on !Configure to launch it
 3. Click on the Configure icon in the Icon Bar
-4. Clock on Floppies
+4. Click on Floppies
 5. Click on OK
 6. Click on OK when presented with the warning about changing the number of discs
 
@@ -89,6 +89,19 @@ currently missing that severely impact the usability.
 This is currently a safety feature since protecting user data is paramount.
 2. CMOS configuration changes aren't persisted (see [#2][iss2])
 3. Switching between various versions of RISC OS is less than convenient (see [#2][iss2])
+
+## Planned future work
+
+The focus for now will be on adding tests to those compontents that got missed during that
+difficult stage of development known as staring at a blank screen and examining logfiles to
+find out why things weren't working. 
+
+After the tests have been written, the plan is to then implement missing features
+such as saving changes to floppies and persisting CMOS state before turning our 
+attention towards performance.
+
+New capabilties, such a hard disc support, are postponed until the application is 
+comparatively bug-free and performant.
 
 ## Thanks
 
