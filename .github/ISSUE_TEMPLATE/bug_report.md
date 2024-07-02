@@ -20,7 +20,7 @@ Steps to reproduce the behaviour:
 **Expected behaviour**
 A clear and concise description of what you expected to happen.
 
-** Please complete the following information**
+**Please complete the following information**
  - Version [e.g. 0.1.1]
 
 **Additional context**
