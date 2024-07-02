@@ -51,7 +51,7 @@ by typing
 ```
 
 While the application starts up hold down delete key to force RISC OS to perform a CMOS reset
-(see #9). If the reset was successful you will be presented with a desktop replete with Icon Bar.
+(see [#9][iss9]). If the reset was successful you will be presented with a desktop replete with Icon Bar.
 
 ### RISC OS 3
 To use RISC OS 3 the application needs to be told where the RISC OS 3 ROM files reside. Start the application
@@ -62,7 +62,7 @@ To use RISC OS 3 the application needs to be told where the RISC OS 3 ROM files 
 ./bios/riscos-311/IC26.ROM ./bios/riscos-311/IC27.ROM
 ```
 
-Holding down delete to reset the CMOS doesn't currently work for RISC OS 3 (see #2) so getting into a desktop with
+Holding down delete to reset the CMOS doesn't currently work for RISC OS 3 (see [#2][iss2) so getting into a desktop with
 an accessible floppy disc requires a few more steps. At the supervisor prompt type
 
 ```bash
@@ -85,10 +85,10 @@ Once in the desktop:
 The application should be considered as pre-release material and there are a couple of nice-to-haves that are
 currently missing that severely impact the usability.
 
-1. Any changes made to floppy discs aren't saved when the application exits (see #16).
+1. Any changes made to floppy discs aren't saved when the application exits (see [#16][iss16]).
 This is currently a safety feature since protecting user data is paramount.
-2. CMOS configuration changes aren't persisted (see #2)
-3. Switching between various versions of RISC OS is less than convenient (see #2)
+2. CMOS configuration changes aren't persisted (see [#2][iss2])
+3. Switching between various versions of RISC OS is less than convenient (see [#2][iss2])
 
 ## Thanks
 
@@ -109,4 +109,7 @@ Archimedes relies on the following libraries and the authors would like to expre
 [libzip]: https://github.com/madler/zlib.git
 [argparse]: https://github.com/p-ranav/argparse
 [spdlog]: https://github.com/gabime/spdlog.git
+[#2]: https://github.com/RichardBrown384/archimedes/issues/2
+[#9]: https://github.com/RichardBrown384/archimedes/issues/9
+[#16]: https://github.com/RichardBrown384/archimedes/issues/16
 
