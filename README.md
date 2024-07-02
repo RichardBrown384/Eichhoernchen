@@ -62,7 +62,7 @@ To use RISC OS 3 the application needs to be told where the RISC OS 3 ROM files 
 ./bios/riscos-311/IC26.ROM ./bios/riscos-311/IC27.ROM
 ```
 
-Holding down delete to reset the CMOS doesn't currently work for RISC OS 3 (see [#2][iss2) so getting into a desktop with
+Holding down delete to reset the CMOS doesn't currently work for RISC OS 3 (see [#2][iss2]) so getting into a desktop with
 an accessible floppy disc requires a few more steps. At the supervisor prompt type
 
 ```bash
@@ -109,7 +109,7 @@ Archimedes relies on the following libraries and the authors would like to expre
 [libzip]: https://github.com/madler/zlib.git
 [argparse]: https://github.com/p-ranav/argparse
 [spdlog]: https://github.com/gabime/spdlog.git
-[#2]: https://github.com/RichardBrown384/archimedes/issues/2
-[#9]: https://github.com/RichardBrown384/archimedes/issues/9
-[#16]: https://github.com/RichardBrown384/archimedes/issues/16
+[iss2]: https://github.com/RichardBrown384/archimedes/issues/2
+[iss9]: https://github.com/RichardBrown384/archimedes/issues/9
+[iss16]: https://github.com/RichardBrown384/archimedes/issues/16
 
