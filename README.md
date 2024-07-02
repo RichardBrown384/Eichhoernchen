@@ -1,6 +1,6 @@
-# archimedes
+# Eichhörnchen
 
-Archimedes is an Acorn Archimedes A3000 Emulator for running 26-bit versions of RISC OS 
+Eichhörnchen (German for Squirrel) is an Acorn Archimedes A3000 Emulator for running 26-bit versions of RISC OS 
 written in C++23 for Windows, Mac and Linux. It's licensed under the terms of the MIT licence.
 
 <p float="left">
@@ -14,17 +14,17 @@ to deliver a great user experience.
 ## Building
 
 ### Requirements
-Archimedes requires C++23 and uses CMake as its build tool (3.6.0 or later).
+Eichhörnchen requires C++23 and uses CMake as its build tool (3.6.0 or later).
 
 ### Build steps
 
 To perform an out of source build run the following series of commands
 
 ```bash
-git clone https://github.com/RichardBrown384/archimedes.git
+git clone https://github.com/RichardBrown384/Eichhoernchen.git
 mkdir build
 cd build
-cmake -G <preferred generator> ../archimedes
+cmake -G <preferred generator> ../Eichhoernchen
 ```
 
 ### Running tests
@@ -105,7 +105,7 @@ comparatively bug-free and performant.
 
 ## Thanks
 
-Archimedes relies on the following libraries and the authors would like to express their thanks to
+Eichhörnchen relies on the following libraries and the authors would like to express their thanks to
 
 1. [Google Test][google-test]
 2. [SDL 3][sdl-3]
@@ -124,7 +124,7 @@ Archimedes relies on the following libraries and the authors would like to expre
 [argparse]: https://github.com/p-ranav/argparse
 [spdlog]: https://github.com/gabime/spdlog.git
 [fmtlib]: https://github.com/fmtlib/fmt.git
-[iss2]: https://github.com/RichardBrown384/archimedes/issues/2
-[iss9]: https://github.com/RichardBrown384/archimedes/issues/9
-[iss16]: https://github.com/RichardBrown384/archimedes/issues/16
+[iss2]: https://github.com/RichardBrown384/Eichhoernchen/issues/2
+[iss9]: https://github.com/RichardBrown384/Eichhoernchen/issues/9
+[iss16]: https://github.com/RichardBrown384/Eichhoernchen/issues/16
 
