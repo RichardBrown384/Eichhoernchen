@@ -4,8 +4,9 @@ Eichhörnchen (German for Squirrel) is an Acorn Archimedes A3000 Emulator for ru
 written in C++23 for Windows, Mac and Linux. It's licensed under the terms of the MIT licence.
 
 <p float="left">
-  <img src="media/artworks-apple.png" width="49%" />
-  <img src="media/pushy-2.png" width="49%" />
+  <img src="media/artworks-apple.png" width="33%" />
+  <img src="media/pushy-2.png" width="33%" />
+  <img src="media/star-fighter-3000-demo.png" width="32%" />
 </p>
 
 The project goal is to develop an Archimedes emulator with a high degree of test coverage
