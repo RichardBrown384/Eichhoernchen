@@ -69,6 +69,7 @@ an accessible floppy disc requires a few more steps. At the supervisor prompt ty
 ```bash
 CONFIGURE FLOPPIES 1
 CONFIGURE WIMPMODE 12
+CONFIGURE NOCAPS
 DESKTOP
 ```
 
