@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Checklist**
+- [ ] The application is running with a good CMOS configuration.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
