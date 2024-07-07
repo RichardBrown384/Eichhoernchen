@@ -2,6 +2,7 @@
 
 #include "Common/Util/BitUtil.h"
 
+constexpr auto KEYBOARD_ID_UK = 0x81u;
 
 constexpr auto HRST = 0xFFu; // Hard reset
 constexpr auto RAK1 = 0xFEu; // Reset ack 1
@@ -71,6 +72,7 @@ namespace rbrown::acorn::archimedes {
 ArchimedesKeyboard::ArchimedesKeyboard() :
     communicationState{ CommunicationState::AwaitingRestart },
     scanMode{ ScanMode::Restart },
+    keyboardState{},
     queue{} {}
 
 auto ArchimedesKeyboard::KeyDown(uint8_t key) -> void {
@@ -82,8 +84,8 @@ auto ArchimedesKeyboard::KeyUp(uint8_t key) -> void {
 }
 
 auto ArchimedesKeyboard::MouseMotion(uint8_t x, uint8_t y) -> void {
-    if (MouseScanActive()) {
-        PushPair({ x, y });
+    if (MouseScanActive())  {
+        PushMouseMotion(x, y);
     }
 }
 
@@ -100,13 +102,13 @@ auto ArchimedesKeyboard::ReadByte(uint8_t& v) -> bool {
     if (Empty() || GetCommunicationState() != CommunicationState::Transmitting) {
         return false;
     }
-    const auto& [nextByte, nextState] = Pop();
+    const auto& [type, nextByte, nextState] = Pop();
     SetCommunicationState(nextState);
     v = nextByte;
     return true;
 }
 
-auto ArchimedesKeyboard::WriteByte(uint8_t v) ->void {
+auto ArchimedesKeyboard::WriteByte(uint8_t v) -> void {
     switch (v) {
         case HRST: return WriteHardwareRestart();
         case RAK1: return WriteHardwareRestartAcknowledge1();
@@ -155,7 +157,7 @@ auto ArchimedesKeyboard::WriteByte(uint8_t v) ->void {
 auto ArchimedesKeyboard::WriteHardwareRestart() -> void {
     if (GetCommunicationState() == CommunicationState::AwaitingRestart) {
         SetCommunicationState(CommunicationState::Transmitting);
-        Push({ .data=HRST, .state=CommunicationState::AwaitingRestartAcknowledge1 });
+        PushProtocol(HRST, CommunicationState::AwaitingRestartAcknowledge1);
         return;
     }
     WriteError();
@@ -164,7 +166,7 @@ auto ArchimedesKeyboard::WriteHardwareRestart() -> void {
 auto ArchimedesKeyboard::WriteHardwareRestartAcknowledge1() -> void {
     if (GetCommunicationState() == CommunicationState::AwaitingRestartAcknowledge1) {
         SetCommunicationState(CommunicationState::Transmitting);
-        Push({ .data=RAK1, .state=CommunicationState::AwaitingRestartAcknowledge2 });
+        PushProtocol(RAK1, CommunicationState::AwaitingRestartAcknowledge2);
         return;
     }
     WriteError();
@@ -173,7 +175,7 @@ auto ArchimedesKeyboard::WriteHardwareRestartAcknowledge1() -> void {
 auto ArchimedesKeyboard::WriteHardwareRestartAcknowledge2() -> void {
     if (GetCommunicationState() == CommunicationState::AwaitingRestartAcknowledge2) {
         SetCommunicationState(CommunicationState::Transmitting);
-        Push({ .data=RAK2, .state=CommunicationState::AwaitingAcknowledge });
+        PushProtocol(RAK2, CommunicationState::AwaitingAcknowledge);
         return;
     }
     WriteError();
@@ -181,7 +183,7 @@ auto ArchimedesKeyboard::WriteHardwareRestartAcknowledge2() -> void {
 
 auto ArchimedesKeyboard::WriteRequestData(uint8_t v) -> void {
     if (GetScanMode() != ScanMode::Restart) {
-        Push({ .data=EncodeDataRequestResponse(v), .state=CommunicationState::AwaitingAcknowledge });
+        PushProtocol(EncodeDataRequestResponse(v), CommunicationState::AwaitingAcknowledge);
         return;
     }
     WriteError();
@@ -197,9 +199,17 @@ auto ArchimedesKeyboard::WriteByteAcknowledge() -> void {
 
 auto ArchimedesKeyboard::WriteAcknowledge(ScanMode m) -> void {
     if (GetCommunicationState() == CommunicationState::AwaitingAcknowledge) {
-        // TODO take action based on the scan mode
+        const auto previousKeyboardScanActive = KeyboardScanActive();
         SetScanMode(m);
         SetCommunicationState(CommunicationState::Transmitting);
+        if (!KeyboardScanActive()) {
+            ClearKeyboard();
+        } else if (!previousKeyboardScanActive) {
+            PushKeyboardState();
+        }
+        if (!MouseScanActive()) {
+            ClearMouse();
+        }
         return;
     }
     WriteError();
@@ -208,7 +218,7 @@ auto ArchimedesKeyboard::WriteAcknowledge(ScanMode m) -> void {
 auto ArchimedesKeyboard::WriteRequestMousePointer() -> void {
     if (GetScanMode() != ScanMode::Restart) {
         // Push fake mouse data onto queue
-        PushPair({ 0u, 0u });
+        PushMouseMotion(0u, 0u);
         return;
     }
     WriteError();
@@ -218,8 +228,7 @@ auto ArchimedesKeyboard::WriteRequestNoOp() -> void {}
 
 auto ArchimedesKeyboard::WriteRequestKeyboardId() -> void {
     if (GetScanMode() != ScanMode::Restart) {
-        // Push UK keyboard id onto queue
-        Push({ .data=0x81u, .state=CommunicationState::AwaitingAcknowledge });
+        PushProtocol(KEYBOARD_ID_UK, CommunicationState::AwaitingAcknowledge);
         return;
     }
     WriteError();
@@ -228,11 +237,10 @@ auto ArchimedesKeyboard::WriteRequestKeyboardId() -> void {
 auto ArchimedesKeyboard::WriteLed(uint8_t) -> void {}
 
 auto ArchimedesKeyboard::WriteError() -> void {
-    // TODO Stop keyboard + mouse scanning etc
     Clear();
     SetScanMode(ScanMode::Restart);
     SetCommunicationState(CommunicationState::Transmitting);
-    Push({ .data=HRST, .state=CommunicationState::AwaitingRestart });
+    PushProtocol(HRST, CommunicationState::AwaitingRestart);
 }
 
 auto ArchimedesKeyboard::GetCommunicationState() const -> CommunicationState { return communicationState; }
@@ -249,28 +257,52 @@ auto ArchimedesKeyboard::MouseScanActive() const -> bool {
     return GetScanMode() == ScanMode::Mouse || GetScanMode() == ScanMode::Both;
 }
 
-auto ArchimedesKeyboard::Empty() const -> bool { return queue.empty(); }
-void ArchimedesKeyboard::PushKeyDown(const uint8_t code) {
-    if (KeyboardScanActive()) {
-        PushPair(EncodeKeyDown(code));
-    }
-}
-void ArchimedesKeyboard::PushKeyUp(const uint8_t code) {
-    if (KeyboardScanActive()) {
-        PushPair(EncodeKeyUp(code));
-    }
-}
-auto ArchimedesKeyboard::PushPair(const std::pair<uint8_t, uint8_t>& p) -> void {
-    Push({ .data=p.first, .state=CommunicationState::AwaitingByteAcknowledge });
-    Push({ .data=p.second, .state=CommunicationState::AwaitingAcknowledge });
-}
-auto ArchimedesKeyboard::Push(const QueueEntry& v) -> void { queue.push(v); }
+auto ArchimedesKeyboard::GetKeyboardState(uint8_t code) const -> bool { return keyboardState[code]; }
+auto ArchimedesKeyboard::SetKeyboardStateDown(uint8_t code) -> void { keyboardState[code] = true; }
+auto ArchimedesKeyboard::SetKeyboardStateUp(uint8_t code) -> void { keyboardState[code] = false; }
 
+auto ArchimedesKeyboard::PushProtocol(uint8_t data, CommunicationState state) -> void {
+    Push({ .type=QueueEntryType::Protocol, .data=data, .state=state });
+}
+auto ArchimedesKeyboard::PushKeyboardState() -> void {
+    for (auto code = 0u; code < keyboardState.size(); ++code) {
+        if (GetKeyboardState(code)) {
+            PushKeyDown(code);
+        }
+    }
+}
+auto ArchimedesKeyboard::PushKeyDown(const uint8_t code) -> void {
+    if (KeyboardScanActive()) {
+        PushPair(QueueEntryType::Keyboard, EncodeKeyDown(code));
+    }
+    SetKeyboardStateDown(code);
+}
+auto ArchimedesKeyboard::PushKeyUp(const uint8_t code) -> void {
+    if (KeyboardScanActive()) {
+        PushPair(QueueEntryType::Keyboard, EncodeKeyUp(code));
+    }
+    SetKeyboardStateUp(code);
+}
+auto ArchimedesKeyboard::PushMouseMotion(uint8_t x , uint8_t y) -> void {
+    PushPair(QueueEntryType::Mouse, {x, y});
+}
+auto ArchimedesKeyboard::PushPair(const QueueEntryType& type, const std::pair<uint8_t, uint8_t>& p) -> void {
+    Push({ .type=type, .data=p.first, .state=CommunicationState::AwaitingByteAcknowledge });
+    Push({ .type=type, .data=p.second, .state=CommunicationState::AwaitingAcknowledge });
+}
+auto ArchimedesKeyboard::Empty() const -> bool { return queue.empty(); }
+auto ArchimedesKeyboard::Push(const QueueEntry& v) -> void { queue.push_back(v); }
 auto ArchimedesKeyboard::Pop() -> QueueEntry {
-    auto entry = queue.front();
-    queue.pop();
+    const auto entry = queue.front();
+    queue.pop_front();
     return entry;
 }
 auto ArchimedesKeyboard::Clear() -> void { queue = {}; }
+auto ArchimedesKeyboard::ClearKeyboard() -> void {
+    std::erase_if(queue, [](const QueueEntry& e) { return e.type == QueueEntryType::Keyboard; });
+}
+auto ArchimedesKeyboard::ClearMouse() -> void {
+    std::erase_if(queue, [](const QueueEntry& e) { return e.type == QueueEntryType::Mouse; });
+}
 
 }
