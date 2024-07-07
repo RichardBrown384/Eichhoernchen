@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <queue>
+#include <list>
+#include <array>
 
 namespace rbrown::acorn::archimedes {
 
@@ -16,14 +17,14 @@ public:
     auto ReadByte(uint8_t&) -> bool;
     auto WriteByte(uint8_t) -> void;
 private:
-    enum class ScanMode {
+    enum class ScanMode : uint8_t {
         Restart,
         None,
         Keyboard,
         Mouse,
         Both,
     };
-    enum class CommunicationState {
+    enum class CommunicationState : uint8_t {
         AwaitingRestart,
         AwaitingRestartAcknowledge1,
         AwaitingRestartAcknowledge2,
@@ -31,7 +32,13 @@ private:
         AwaitingAcknowledge,
         Transmitting,
     };
+    enum class QueueEntryType : uint8_t {
+        Protocol,
+        Keyboard,
+        Mouse,
+    };
     struct QueueEntry {
+        QueueEntryType type;
         uint8_t data;
         CommunicationState state;
     };
@@ -61,19 +68,27 @@ private:
     [[nodiscard]] auto KeyboardScanActive() const -> bool;
     [[nodiscard]] auto MouseScanActive() const -> bool;
 
-    [[nodiscard]] auto Empty() const -> bool;
+    [[nodiscard]] auto GetKeyboardState(uint8_t) const -> bool;
+    auto SetKeyboardStateDown(uint8_t) -> void;
+    auto SetKeyboardStateUp(uint8_t) -> void;
 
+    auto PushProtocol(uint8_t, CommunicationState) -> void;
+    auto PushKeyboardState() -> void;
     auto PushKeyDown(uint8_t) -> void;
     auto PushKeyUp(uint8_t) -> void;
-    auto PushPair(const std::pair<uint8_t, uint8_t>&) -> void;
+    auto PushMouseMotion(uint8_t, uint8_t) -> void;
+    auto PushPair(const QueueEntryType& type, const std::pair<uint8_t, uint8_t>&) -> void;
+    [[nodiscard]] auto Empty() const -> bool;
     auto Push(const QueueEntry&) -> void;
     auto Pop() -> QueueEntry;
     auto Clear() -> void;
+    auto ClearKeyboard() -> void;
+    auto ClearMouse() -> void;
     
     CommunicationState communicationState;
     ScanMode scanMode;
-    std::queue<QueueEntry> queue;
-
+    std::array<bool, 256u> keyboardState;
+    std::list<QueueEntry> queue;
 };
 
 }

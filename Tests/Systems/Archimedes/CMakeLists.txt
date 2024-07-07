@@ -6,6 +6,15 @@ set(IOC_TEST_SOURCE
     src/Ioc/IocTest.cpp
     )
 
+set(KEYBOARD_TEST_SOURCE
+    src/Keyboard/BothScan.cpp
+    src/Keyboard/KeyboardScan.cpp
+    src/Keyboard/KeyboardTest.cpp
+    src/Keyboard/MouseScan.cpp
+    src/Keyboard/NoScan.cpp
+    src/Keyboard/ResetProtocol.cpp
+    )
+
 set(MEMC_TEST_SOURCE
     src/Memc/MemcTest.cpp
     src/Memc/AccessTiming.cpp
@@ -42,6 +51,7 @@ set(WDC1772_TEST_SOURCE
 
 add_executable(ArchimedesTest
     ${IOC_TEST_SOURCE}
+    ${KEYBOARD_TEST_SOURCE}
     ${MEMC_TEST_SOURCE}
     ${WDC1772_TEST_SOURCE}
     )
