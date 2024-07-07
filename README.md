@@ -43,6 +43,8 @@ In order to run the application you're going to require a copy of RISC OS 2.00 (
 relative to the application's working directory. Other versions of the OS can be used but require the use of 
 command-line switches (see below).
 
+We recommend RISC OS 3.11 over other versions.
+
 ### RISC OS 2
 Assuming the application was built in a directory called `build` you can run the application with a disc image
 by typing 
@@ -63,24 +65,8 @@ To use RISC OS 3 the application needs to be told where the RISC OS 3 ROM files 
 ./bios/riscos-311/IC26.ROM ./bios/riscos-311/IC27.ROM
 ```
 
-Holding down delete to reset the CMOS doesn't currently work for RISC OS 3 (see [#2][iss2]) so getting into a desktop with
-an accessible floppy disc requires a few more steps. At the supervisor prompt type
-
-```bash
-CONFIGURE FLOPPIES 1
-CONFIGURE WIMPMODE 12
-CONFIGURE NOCAPS
-DESKTOP
-```
-
-Once in the desktop:
-
-1. Click on Apps (bottom left)
-2. Double-click on !Configure to launch it
-3. Click on the Configure icon in the Icon Bar
-4. Click on Floppies
-5. Click on OK
-6. Click on OK when presented with the warning about changing the number of discs
+While the application starts up hold down delete key to force RISC OS to perform a CMOS reset
+(see [#9][iss9]). If the reset was successful you will be presented with a desktop replete with Icon Bar.
 
 ## Current limitations
 
