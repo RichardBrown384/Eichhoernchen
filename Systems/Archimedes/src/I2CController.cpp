@@ -16,14 +16,33 @@ I2CController::I2CController(I2CBus& b) :
     transferredBits{},
     bus{ b } {}
 
-auto I2CController::ReadData() const -> bool { return data & transmit; }
+auto I2CController::GetClock() const -> bool { return clock; }
+auto I2CController::GetData() const -> bool { return data; }
+auto I2CController::GetDataValid() const -> bool { return dataValid; }
+auto I2CController::GetTransmit() const -> bool { return transmit; }
+auto I2CController::GetState() const -> State { return state; }
+auto I2CController::GetBuffer() const -> uint8_t { return buffer; }
+auto I2CController::GetTransferredBits() const -> uint8_t { return transferredBits; }
+
+auto I2CController::SetClock(bool v) -> void { clock = v; }
+auto I2CController::SetData(bool v) -> void { data = v; }
+auto I2CController::SetDataValid(bool v) -> void { dataValid = v; }
+auto I2CController::SetTransmit(bool v) -> void { transmit = v; }
+auto I2CController::SetState(State s) -> void { state = s; }
+auto I2CController::SetBuffer(uint8_t v) -> void {
+    buffer = v;
+    transferredBits = 0u;
+}
+auto I2CController::SetTransferredBits(uint8_t v) -> void { transferredBits = v; }
+
+auto I2CController::ReadData() const -> bool { return GetData() && GetTransmit(); }
 
 auto I2CController::WriteClockData(uint32_t v) -> void {
     const auto nextData = ExtractBitField(v, 0u, 1u);
     const auto nextClock = ExtractBitField(v, 1u, 1u);
 
-    if (clock == nextClock) {
-        if (clock && data != nextData) {
+    if (GetClock() == nextClock) {
+        if (GetClock() && GetData() != nextData) {
             if (nextData) {
                 spdlog::debug("I2C received STOP");
                 bus.Stop();
@@ -35,22 +54,22 @@ auto I2CController::WriteClockData(uint32_t v) -> void {
                 bus.Start();
                 SetState(State::ReceivingTargetAddress);
             }
-            dataValid = false;
+            SetDataValid(false);
         }
     } else if (!nextClock) {
         SetTransmit(true);
-        if (dataValid) {
-            const auto newState = Update();
-            if (newState == State::Stopped) {
+        if (GetDataValid()) {
+            const auto nextState = Update();
+            if (nextState == State::Stopped) {
                 bus.Stop();
             }
-            SetState(newState);
+            SetState(nextState);
         }
-        dataValid = true;
+        SetDataValid(true);
     }
 
-    clock = nextClock;
-    data = nextData;
+    SetClock(nextClock);
+    SetData(nextData);
 }
 
 auto I2CController::Update() -> I2CController::State {
@@ -86,9 +105,10 @@ auto I2CController::Update() -> I2CController::State {
 
         case State::ReceivingAck: {
             spdlog::debug("I2C transmitted data");
-            spdlog::debug("I2C Receiving ack for target to transmit {:02x}", data);
-            if (!data) {
-                SetBuffer(bus.StartTransmit());
+            spdlog::debug("I2C Receiving ack for target to transmit {:02x}", GetData());
+            uint8_t v;
+            if (!GetData() && bus.StartTransmit(v)) {
+                SetBuffer(v);
                 TransmitBit();
                 return State::TransmittingData;
             }
@@ -116,9 +136,13 @@ auto I2CController::Update() -> I2CController::State {
 
         case State::TransmittingAckToTransmit: {
             spdlog::debug("I2C transmit ack transmitted");
-            SetBuffer(bus.StartTransmit());
-            TransmitBit();
-            return State::TransmittingData;
+            uint8_t v;
+            if (bus.StartTransmit(v)) {
+                SetBuffer(v);
+                TransmitBit();
+                return State::TransmittingData;
+            }
+            return State::Stopped;
         }
 
         default:
@@ -126,37 +150,30 @@ auto I2CController::Update() -> I2CController::State {
     }
 }
 
-auto I2CController::GetState() const -> State { return state; }
-auto I2CController::SetState(State v) -> void { state = v; }
-
-auto I2CController::GetBuffer() const -> uint8_t { return buffer; }
-auto I2CController::SetBuffer(uint8_t v) -> void {
-    buffer = v;
-    transferredBits = 0u;
-}
-
 auto I2CController::ReceiveBit() -> bool {
-    buffer <<= 1u;
-    buffer += data;
-    if (++transferredBits == 8u) {
-        transferredBits = 0u;
+    const auto bits = GetTransferredBits() + 1u;
+    const auto b = GetBuffer() << 1u;
+    const auto d = GetData();
+    SetBuffer(b + d);
+    if (bits == 8u) {
+        SetTransferredBits(0u);
         return true;
     }
+    SetTransferredBits(bits);
     return false;
 }
 
 auto I2CController::TransmitBit() -> bool {
-    SetTransmit(buffer & 0x80u);
-    buffer <<= 1u;
-    if (++transferredBits == 8u) {
-        transferredBits = 0u;
+    const auto bits = GetTransferredBits() + 1u;
+    const auto b = GetBuffer();
+    SetTransmit(b & 0x80u);
+    SetBuffer(b << 1u);
+    if (bits == 8u) {
+        SetTransferredBits(0u);
         return true;
     }
+    SetTransferredBits(bits);
     return false;
-}
-
-auto I2CController::SetTransmit(bool v) -> void {
-    transmit = v;
 }
 
 }
