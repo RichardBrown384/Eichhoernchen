@@ -11,7 +11,7 @@ public:
     virtual auto Stop() -> void = 0;
     virtual auto ReceiveTargetAddress(uint8_t) -> bool = 0;
     virtual auto ReceiveData(uint8_t) -> bool = 0;
-    virtual auto StartTransmit() -> uint8_t = 0;
+    virtual auto StartTransmit(uint8_t&) -> bool = 0;
     virtual auto EndTransmit() -> bool = 0;
 };
 

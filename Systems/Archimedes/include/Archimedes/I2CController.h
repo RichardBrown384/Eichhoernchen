@@ -24,15 +24,24 @@ private:
     };
     auto Update() -> I2CController::State;
 
+    [[nodiscard]] auto GetClock() const -> bool;
+    [[nodiscard]] auto GetData() const -> bool;
+    [[nodiscard]] auto GetDataValid() const -> bool;
+    [[nodiscard]] auto GetTransmit() const -> bool;
     [[nodiscard]] auto GetState() const -> State;
     [[nodiscard]] auto GetBuffer() const -> uint8_t;
+    [[nodiscard]] auto GetTransferredBits() const -> uint8_t;
 
+    auto SetClock(bool) -> void;
+    auto SetData(bool) -> void;
+    auto SetDataValid(bool) -> void;
+    auto SetTransmit(bool) -> void;
     auto SetState(State) -> void;
     auto SetBuffer(uint8_t) -> void;
+    auto SetTransferredBits(uint8_t) -> void;
 
     auto ReceiveBit() -> bool;
     auto TransmitBit() -> bool;
-    auto SetTransmit(bool) -> void;
 
     bool clock;
     bool data;

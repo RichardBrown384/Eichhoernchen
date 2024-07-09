@@ -35,6 +35,11 @@ set(MEMC_TEST_SOURCE
     src/Memc/VideoController.cpp
     )
 
+set(RTC8583_TEST_SOURCE
+    src/RTC8583/RTC8583Test.cpp
+    src/RTC8583/RTC8583Transactions.cpp
+    )
+
 set(WDC1772_TEST_SOURCE
     src/WDC1772/ForceInterrupts.cpp
     src/WDC1772/ReadAddresses.cpp
@@ -53,6 +58,7 @@ add_executable(ArchimedesTest
     ${IOC_TEST_SOURCE}
     ${KEYBOARD_TEST_SOURCE}
     ${MEMC_TEST_SOURCE}
+    ${RTC8583_TEST_SOURCE}
     ${WDC1772_TEST_SOURCE}
     )
 
