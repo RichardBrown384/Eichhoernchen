@@ -10,7 +10,7 @@ template<typename T>
 constexpr auto U(const T& v) { return std::to_underlying(v); }
 
 consteval auto ConstructScanCodeMapping() {
-    std::array<ScanCode, SDL_NUM_SCANCODES> mapping {};
+    std::array<ScanCode, SDL_SCANCODE_COUNT> mapping {};
 
     mapping.fill(ScanCode::CODE_UNKNOWN);
 
@@ -206,6 +206,9 @@ public:
     auto SetSize(int w, int h) -> bool final {
         return SDL_SetWindowSize(*this, w, h) == 0;
     }
+    auto SetRelativeMouseMode(bool) -> bool final {
+        return SDL_SetWindowRelativeMouseMode(*this, true);
+    }
 private:
     WindowUniquePtr window;
 };
@@ -312,7 +315,7 @@ auto PollEvent(Event& e) -> bool {
             break;
         }
         case SDL_EVENT_KEY_DOWN: {
-            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.keysym.scancode);
+            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.scancode);
             if (scanCode != ScanCode::CODE_UNKNOWN) {
                 e.type = EventType::KEY_DOWN;
                 e.key.scanCode = scanCode;
@@ -321,7 +324,7 @@ auto PollEvent(Event& e) -> bool {
             break;
         }
         case SDL_EVENT_KEY_UP: {
-            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.keysym.scancode);
+            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.scancode);
             if (scanCode != ScanCode::CODE_UNKNOWN) {
                 e.type = EventType::KEY_UP;
                 e.key.scanCode = scanCode;
@@ -369,10 +372,6 @@ auto GetKeyboardState(ScanCode c) -> bool {
         return state[sdlScanCode];
     }
     return false;
-}
-
-auto SetRelativeMouseMode(bool enabled) -> bool {
-    return SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE) == 0;
 }
 
 }

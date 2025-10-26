@@ -20,6 +20,9 @@ public:
         scaleFactor{ scaleFactor },
         complete{ false } {}
     ~PresentationContextImpl() final = default;
+    auto SetRelativeMouseMode(bool) -> void final {
+        window->SetRelativeMouseMode(true);
+    }
     auto SetTextureSource(uint32_t x, uint32_t y, uint32_t w, uint32_t h) -> void final {
         textureRect.x = static_cast<float>(x);
         textureRect.y = static_cast<float>(y);
