@@ -204,7 +204,7 @@ public:
     ~WindowImpl() final = default;
     operator SDL_Window*() const { return window.get(); } // NOLINT
     auto SetSize(int w, int h) -> bool final {
-        return SDL_SetWindowSize(*this, w, h) == 0;
+        return SDL_SetWindowSize(*this, w, h);
     }
     auto SetRelativeMouseMode(bool) -> bool final {
         return SDL_SetWindowRelativeMouseMode(*this, true);
@@ -220,7 +220,7 @@ public:
     ~TextureImpl() final = default;
     operator SDL_Texture*() const { return texture.get(); } // NOLINT
     auto LockTexture() -> bool final {
-        if (SDL_LockTexture(*this, nullptr, reinterpret_cast<void**>(&pixels), &pitch)) {
+        if (!SDL_LockTexture(*this, nullptr, reinterpret_cast<void**>(&pixels), &pitch)) {
             pixels = {};
             pitch = {};
             return false;
@@ -261,10 +261,10 @@ public:
     operator SDL_Renderer*() const { return renderer.get(); } // NOLINT
     auto RenderTexture(Texture& t, const FloatRect& r) -> bool override {
         const SDL_FRect source = { .x = r.x, .y = r.y, .w = r.w, .h = r.h };
-        return SDL_RenderTexture(*this, dynamic_cast<TextureImpl&>(t), &source, nullptr) == 0;
+        return SDL_RenderTexture(*this, dynamic_cast<TextureImpl&>(t), &source, nullptr);
     }
     auto Present() -> bool override {
-        return SDL_RenderPresent(*this) == 0;
+        return SDL_RenderPresent(*this);
     }
 private:
     RendererUniquePtr renderer;
@@ -302,7 +302,7 @@ auto CreateTexture(Renderer& renderer, int w, int h) -> std::unique_ptr<rbrown::
 }
 
 
-auto Init() -> bool { return !SDL_Init(SDL_INIT_VIDEO); }
+auto Init() -> bool { return SDL_Init(SDL_INIT_VIDEO); }
 auto Quit() -> void { SDL_Quit(); }
 
 auto PollEvent(Event& e) -> bool {
