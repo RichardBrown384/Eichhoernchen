@@ -17,12 +17,9 @@ FetchContent_Declare(googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # SDL 3
-# Note: I was using prerelease tags to track SDL3 but those tags got deleted.
-# Using a fixed commit hash for now so that we don't have to keep updating while
-# SDL, I presume, prepare for an initial 3.0 release.
 FetchContent_Declare(sdl3
   GIT_REPOSITORY     https://github.com/libsdl-org/SDL.git
-  GIT_TAG            9651ca59187c16079846918483c40d6b5c2f454c # HEAD on 09.06.2024
+  GIT_TAG            release-3.2.24
 )
 
 # ZLib

@@ -189,7 +189,7 @@ auto Archimedes::MouseButtonUp(const MouseButtonEvent& e) -> void {
 
 auto Archimedes::StartUp() -> void {
     m_presentationContext->SetWindowSize(640, 512);
-    SetRelativeMouseMode(true);
+    m_presentationContext->SetRelativeMouseMode(true);
 }
 
 auto Archimedes::ShutDown() -> void {}

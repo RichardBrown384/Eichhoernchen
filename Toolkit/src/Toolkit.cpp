@@ -10,7 +10,7 @@ template<typename T>
 constexpr auto U(const T& v) { return std::to_underlying(v); }
 
 consteval auto ConstructScanCodeMapping() {
-    std::array<ScanCode, SDL_NUM_SCANCODES> mapping {};
+    std::array<ScanCode, SDL_SCANCODE_COUNT> mapping {};
 
     mapping.fill(ScanCode::CODE_UNKNOWN);
 
@@ -204,7 +204,10 @@ public:
     ~WindowImpl() final = default;
     operator SDL_Window*() const { return window.get(); } // NOLINT
     auto SetSize(int w, int h) -> bool final {
-        return SDL_SetWindowSize(*this, w, h) == 0;
+        return SDL_SetWindowSize(*this, w, h);
+    }
+    auto SetRelativeMouseMode(bool) -> bool final {
+        return SDL_SetWindowRelativeMouseMode(*this, true);
     }
 private:
     WindowUniquePtr window;
@@ -217,7 +220,7 @@ public:
     ~TextureImpl() final = default;
     operator SDL_Texture*() const { return texture.get(); } // NOLINT
     auto LockTexture() -> bool final {
-        if (SDL_LockTexture(*this, nullptr, reinterpret_cast<void**>(&pixels), &pitch)) {
+        if (!SDL_LockTexture(*this, nullptr, reinterpret_cast<void**>(&pixels), &pitch)) {
             pixels = {};
             pitch = {};
             return false;
@@ -258,10 +261,10 @@ public:
     operator SDL_Renderer*() const { return renderer.get(); } // NOLINT
     auto RenderTexture(Texture& t, const FloatRect& r) -> bool override {
         const SDL_FRect source = { .x = r.x, .y = r.y, .w = r.w, .h = r.h };
-        return SDL_RenderTexture(*this, dynamic_cast<TextureImpl&>(t), &source, nullptr) == 0;
+        return SDL_RenderTexture(*this, dynamic_cast<TextureImpl&>(t), &source, nullptr);
     }
     auto Present() -> bool override {
-        return SDL_RenderPresent(*this) == 0;
+        return SDL_RenderPresent(*this);
     }
 private:
     RendererUniquePtr renderer;
@@ -299,7 +302,7 @@ auto CreateTexture(Renderer& renderer, int w, int h) -> std::unique_ptr<rbrown::
 }
 
 
-auto Init() -> bool { return !SDL_Init(SDL_INIT_VIDEO); }
+auto Init() -> bool { return SDL_Init(SDL_INIT_VIDEO); }
 auto Quit() -> void { SDL_Quit(); }
 
 auto PollEvent(Event& e) -> bool {
@@ -312,7 +315,7 @@ auto PollEvent(Event& e) -> bool {
             break;
         }
         case SDL_EVENT_KEY_DOWN: {
-            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.keysym.scancode);
+            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.scancode);
             if (scanCode != ScanCode::CODE_UNKNOWN) {
                 e.type = EventType::KEY_DOWN;
                 e.key.scanCode = scanCode;
@@ -321,7 +324,7 @@ auto PollEvent(Event& e) -> bool {
             break;
         }
         case SDL_EVENT_KEY_UP: {
-            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.keysym.scancode);
+            const auto scanCode = MapSDLScanCodeToToolkitScanCode(sdlEvent.key.scancode);
             if (scanCode != ScanCode::CODE_UNKNOWN) {
                 e.type = EventType::KEY_UP;
                 e.key.scanCode = scanCode;
@@ -369,10 +372,6 @@ auto GetKeyboardState(ScanCode c) -> bool {
         return state[sdlScanCode];
     }
     return false;
-}
-
-auto SetRelativeMouseMode(bool enabled) -> bool {
-    return SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE) == 0;
 }
 
 }

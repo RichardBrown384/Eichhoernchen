@@ -19,6 +19,7 @@ class Window {
 public:
     virtual ~Window() = default;
     virtual auto SetSize(int, int) -> bool = 0;
+    virtual auto SetRelativeMouseMode(bool) -> bool = 0;
 };
 
 class Renderer {
@@ -40,6 +41,7 @@ public:
 class PresentationContext {
 public:
     virtual ~PresentationContext() = default;
+    virtual auto SetRelativeMouseMode(bool) -> void = 0;
     virtual auto SetTextureSource(uint32_t, uint32_t, uint32_t, uint32_t) -> void = 0;
     virtual auto SetWindowSize(uint32_t, uint32_t) -> void = 0;
     virtual auto LockTexture() -> bool = 0;
