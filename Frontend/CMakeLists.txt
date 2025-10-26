@@ -14,7 +14,6 @@ target_include_directories(
 )
 
 target_link_libraries(frontend
-    common
     toolkit
     archimedes
     argparse)

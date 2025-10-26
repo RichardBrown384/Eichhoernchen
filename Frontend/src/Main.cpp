@@ -130,6 +130,8 @@ int main(int argc, char** argv) {
             emulator->RunForFrame();
         }
         emulator->ShutDown();
+    } else {
+        return 1;
     }
 
     Quit();

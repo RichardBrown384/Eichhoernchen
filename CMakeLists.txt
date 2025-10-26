@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.6.0)
+cmake_minimum_required(VERSION 3.31.9)
 
-project(Emulators CXX)
+project(Eichhoernchen CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,7 @@ include(FetchContent)
 # Google Test
 FetchContent_Declare(googletest
   GIT_REPOSITORY     https://github.com/google/googletest.git
-  GIT_TAG            v1.14.0
+  GIT_TAG            v1.17.0
 )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
@@ -34,7 +34,7 @@ FetchContent_Declare(zlib
 # Libzip
 FetchContent_Declare(libzip
   GIT_REPOSITORY     https://github.com/nih-at/libzip.git
-  GIT_TAG            v1.10.1
+  GIT_TAG            v1.11.4
 )
 set(ENABLE_COMMONCRYPTO OFF CACHE BOOL "" FORCE)
 set(ENABLE_GNUTLS OFF CACHE BOOL "" FORCE)
@@ -50,19 +50,19 @@ set(BUILD_DOC OFF CACHE BOOL "" FORCE)
 # Agrparse
 FetchContent_Declare(argparse
   GIT_REPOSITORY   https://github.com/p-ranav/argparse
-  GIT_TAG          9893754f679ad1f2d581d6fc39d8f6de0568e4f8
+  GIT_TAG          v3.2
 )
 
 # spdlog
 FetchContent_Declare(spdlog
     GIT_REPOSITORY  https://github.com/gabime/spdlog.git
-    GIT_TAG         v1.13.0
+    GIT_TAG          v1.16.0
 )
 
 #fmtlib
 FetchContent_Declare(fmtlib
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG 10.1.1
+    GIT_TAG 12.0.0
     )
 
 FetchContent_MakeAvailable(zlib libzip googletest sdl3 argparse spdlog fmtlib)
