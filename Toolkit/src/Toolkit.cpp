@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <array>
+#include <utility>
 
 namespace rbrown::toolkit {
 

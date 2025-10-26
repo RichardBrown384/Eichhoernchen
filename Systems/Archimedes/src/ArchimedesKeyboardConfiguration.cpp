@@ -2,7 +2,9 @@
 
 #include "Toolkit/Toolkit.h"
 
+#include <algorithm>
 #include <array>
+#include <utility>
 
 using namespace rbrown::toolkit;
 
