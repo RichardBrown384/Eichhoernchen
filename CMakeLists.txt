@@ -34,14 +34,15 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(zlib
   GIT_REPOSITORY     https://github.com/madler/zlib.git
   GIT_TAG            v1.3.1
+  OVERRIDE_FIND_PACKAGE ZLIB
 )
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(zlib)
+#FetchContent_MakeAvailable(zlib)
 
 # Point libzip to our zlib explicitly
-set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" "${zlib_BINARY_DIR}")
-set(ZLIB_LIBRARY zlib)
-add_library(ZLIB::ZLIB ALIAS zlib)
+#set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" "${zlib_BINARY_DIR}")
+#set(ZLIB_LIBRARY zlib)
+#add_library(ZLIB::ZLIB ALIAS zlib)
 
 # Libzip
 FetchContent_Declare(libzip
@@ -78,7 +79,7 @@ FetchContent_Declare(fmtlib
   GIT_TAG 12.0.0
 )
 
-FetchContent_MakeAvailable(libzip googletest sdl3 argparse spdlog fmtlib)
+FetchContent_MakeAvailable(zlib libzip googletest sdl3 argparse spdlog fmtlib)
 
 if(MSVC)
     set(EMULATOR_COMPILER_FLAGS
