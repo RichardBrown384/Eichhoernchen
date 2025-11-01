@@ -26,6 +26,13 @@ constexpr auto ZipFOpenIndex(Args&&... args) {
         (zip_fopen_index(std::forward<Args>(args)...), zip_fclose);
 }
 
+namespace {
+auto PathToUtf8(const std::filesystem::path& path) -> std::string {
+    const auto utf8 = path.u8string();
+    return {utf8.begin(), utf8.end()};
+}
+}
+
 constexpr bool HasSuffix(const std::string& name, const std::vector<std::string>& suffixes) {
     return std::any_of(suffixes.cbegin(), suffixes.cend(), [&name](const std::string& suffix) {
         return name.ends_with(suffix);
@@ -71,7 +78,8 @@ std::vector<uint8_t> UnzipEntry(zip_t& zip, zip_int64_t entry) {
 std::vector<uint8_t>
 LoadZippedFile(const std::filesystem::path& path, const std::function<bool(std::string)>& predicate) {
     int zip_error;
-    auto zip = ZipOpen(path.c_str(), ZIP_RDONLY, &zip_error);
+    const auto utf8path = PathToUtf8(path);
+    auto zip = ZipOpen(utf8path.c_str(), ZIP_RDONLY, &zip_error);
     if (zip) {
         auto entry = FindEntry(*zip, predicate);
         if (entry >= 0) {
@@ -90,7 +98,8 @@ std::vector<uint8_t> LoadZippedFile(const std::filesystem::path& path, const std
 
 std::vector<uint8_t> LoadZippedFileWithFallback(const std::filesystem::path& path, const std::function<bool(std::string)>& predicate) {
     int zip_error;
-    auto zip = ZipOpen(path.c_str(), ZIP_RDONLY, &zip_error);
+    const auto utf8path = PathToUtf8(path);
+    auto zip = ZipOpen(utf8path.c_str(), ZIP_RDONLY, &zip_error);
     if (zip) {
         auto entry = FindEntry(*zip, predicate);
         if (entry >= 0) {

@@ -74,6 +74,10 @@ target_compile_options(
     ${EMULATOR_COMPILER_FLAGS}
 )
 
-target_link_libraries(ArchimedesTest PRIVATE archimedes common gmock gtest gtest_main)
+#if (MSVC)
+#    target_compile_definitions(ArchimedesTest PUBLIC GTEST_LINKED_AS_SHARED_LIBRARY)
+#endif()
+
+target_link_libraries(ArchimedesTest PRIVATE archimedes common GTest::gtest_main GTest::gmock)
 
 add_test(NAME ArchimedesTest COMMAND ArchimedesTest)

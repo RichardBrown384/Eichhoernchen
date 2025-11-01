@@ -230,6 +230,10 @@ target_compile_options(
     ${EMULATOR_COMPILER_FLAGS}
 )
 
-target_link_libraries(ArmTest PRIVATE Arm gmock gtest gtest_main)
+#if (MSVC)
+#    target_compile_definitions(ArmTest PUBLIC GTEST_LINKED_AS_SHARED_LIBRARY)
+#endif()
+
+target_link_libraries(ArmTest PRIVATE Arm GTest::gtest_main GTest::gmock)
 
 add_test(NAME ArmTest COMMAND ArmTest)
