@@ -74,16 +74,3 @@ target_link_libraries(
     PRIVATE
     fmt::fmt
 )
-
-install(TARGETS Arm EXPORT ArmConfig DESTINATION lib)
-install(FILES ${ARM_INCLUDES} DESTINATION include/Arm)
-
-export(TARGETS Arm
-    NAMESPACE Arm::
-    FILE "${CMAKE_CURRENT_BINARY_DIR}/ArmConfig.cmake"
-)
-
-install(EXPORT ArmConfig
-    NAMESPACE Arm::
-    DESTINATION lib/cmake/Arm
-)
