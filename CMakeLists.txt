@@ -9,6 +9,16 @@ include(FetchContent)
 
 #set(FETCHCONTENT_FULLY_DISCONNECTED true)
 
+# For whatever reason all the libs default to shared which on macOS is fine
+# however under windows this causes problems when trying to link and then run
+# the tests. For now force windows builds to use static linking.
+# The results aren't entirely satisfactory since libzip ends up using
+# zlib dynamically but for the sake of running tests in CI this is sufficient.
+if(WIN32)
+    # Force shared libs on Windows CI to avoid linker issues
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Force static libs on Windows" FORCE)
+endif()
+
 # Google Test
 FetchContent_Declare(googletest
   GIT_REPOSITORY     https://github.com/google/googletest.git
@@ -32,7 +42,7 @@ FetchContent_Declare(zlib
 )
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(zlib)
-if (NOT TARGET ZLIB::ZLIB)
+if(NOT TARGET ZLIB::ZLIB)
     add_library(ZLIB::ZLIB ALIAS zlib)
 endif()
 
