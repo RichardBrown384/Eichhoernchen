@@ -77,16 +77,37 @@ FetchContent_Declare(fmtlib
 FetchContent_MakeAvailable(libzip googletest sdl3 argparse spdlog fmtlib)
 
 if(MSVC)
-    set(EMULATOR_COMPILER_FLAGS
-        /Wall
-        /wd4100 /wd4514 /wd4710 /wd4820
-        /experimental:external /external:W0
-    )
+  set(EMULATOR_COMPILER_FLAGS
+    /W4                    # High warning level, realistic for production
+    /permissive-           # Enforce strict ISO C++ (matches clang/gcc)
+    /Zc:__cplusplus        # Set __cplusplus correctly (needed for some libs)
+    /Zc:inline             # Better inline semantics
+    /Zc:preprocessor       # Modern preprocessor
+    /Zc:throwingNew        # Enforce throwing new semantics
+    /EHsc                  # Standard C++ exception model
+    /FC                    # Full path in diagnostics
+    /external:anglebrackets
+    /external:W0           # Silence warnings from system headers
+    /WX                    # Treat warnings as errors (like -Werror)
+
+    # Disable a few common, harmless ones:
+    /wd4100    # Unreferenced formal parameter
+    /wd4324    # Structure was padded due to alignment specifier
+    /wd4505    # Unreferenced local function has been removed
+
+    # Disable cases that occur because we haven't tried to compile this on windows for 10 years
+    /wd4146    # Disable "unary minus on unsigned" warning
+    /wd4244    # Truncation uint32_t to uint8_t (which is okay but we should fix it)
+    /wd4267    # Truncation
+    /wd4389    # Signed/unsigned
+    /wd4805    # unsafe mix of bool/unsigned
+  )
 else()
-    set(EMULATOR_COMPILER_FLAGS
-        -Wall -Wextra -pedantic -Werror
-        -Wno-unused-parameter
-    )
+  set(EMULATOR_COMPILER_FLAGS
+    -Wall -Wextra -pedantic -Werror
+    -Wno-unused-parameter -Wno-unused-function
+    #-Wconversion -Wsign-conversion
+  )
 endif()
 
 enable_testing()
