@@ -21,12 +21,15 @@ FetchContent_Declare(sdl3
   GIT_REPOSITORY     https://github.com/libsdl-org/SDL.git
   GIT_TAG            release-3.2.24
 )
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 
 # ZLib
 FetchContent_Declare(zlib
   GIT_REPOSITORY     https://github.com/madler/zlib.git
   GIT_TAG            v1.3.1
 )
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 # Libzip
 FetchContent_Declare(libzip
@@ -38,11 +41,15 @@ set(ENABLE_GNUTLS OFF CACHE BOOL "" FORCE)
 set(ENABLE_MBEDTLS OFF CACHE BOOL "" FORCE)
 set(ENABLE_OPENSSL OFF CACHE BOOL "" FORCE)
 set(ENABLE_WINDOWS_CRYPTO OFF CACHE BOOL "" FORCE)
+set(ENABLE_BZIP2 OFF CACHE BOOL "" FORCE)
+set(ENABLE_LZMA OFF CACHE BOOL "" FORCE)
+set(ENABLE_ZSTD OFF CACHE BOOL "" FORCE)
 set(BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(BUILD_REGRESS OFF CACHE BOOL "" FORCE)
 set(BUILD_OSSFUZZ OFF CACHE BOOL "" FORCE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_DOC OFF CACHE BOOL "" FORCE)
+set(LIBZIP_DO_INSTALL OFF CACHE BOOL "" FORCE)
 
 # Agrparse
 FetchContent_Declare(argparse
@@ -52,15 +59,15 @@ FetchContent_Declare(argparse
 
 # spdlog
 FetchContent_Declare(spdlog
-    GIT_REPOSITORY  https://github.com/gabime/spdlog.git
-    GIT_TAG          v1.16.0
+  GIT_REPOSITORY  https://github.com/gabime/spdlog.git
+  GIT_TAG          v1.16.0
 )
 
-#fmtlib
+# fmtlib
 FetchContent_Declare(fmtlib
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG 12.0.0
-    )
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 12.0.0
+)
 
 FetchContent_MakeAvailable(zlib libzip googletest sdl3 argparse spdlog fmtlib)
 
@@ -76,6 +83,8 @@ else()
         -Wno-unused-parameter
     )
 endif()
+
+enable_testing()
 
 add_subdirectory(Common)
 add_subdirectory(Frontend)
