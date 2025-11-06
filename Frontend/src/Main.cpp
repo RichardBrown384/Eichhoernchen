@@ -19,7 +19,7 @@ struct IndividualConfiguration {
     std::vector<std::string> m_biosFiles {};
 };
 
-constexpr auto AddBiosFilesArgument(
+auto AddBiosFilesArgument(
     argparse::ArgumentParser& parser,
     const std::initializer_list<std::string>& biosFiles,
     IndividualConfiguration& config) {
@@ -30,7 +30,7 @@ constexpr auto AddBiosFilesArgument(
         .store_into(config.m_biosFiles);
 }
 
-constexpr auto AddZipSearchExtensionsArgument(
+auto AddZipSearchExtensionsArgument(
     argparse::ArgumentParser& parser,
     const std::initializer_list<std::string>& extensions,
     IndividualConfiguration& config) {
