@@ -31,13 +31,15 @@ constexpr auto VECTOR_FIQ = 0x1Cu;
 
 constexpr auto INSTRUCTION_NOOP = 0xE1A00000; // MOV R0, R0
 
-constexpr auto MapRegisterByMode(uint32_t mode, uint32_t r) {
+constexpr auto MapRegisterByMode(const uint32_t mode, const uint32_t r) -> uint32_t {
     if (r < 8u) {
         return r;
-    } else if (r < 13u) {
-        return 8u + 2u * (r - 8u) + (mode == PSR_MODE_FIQ);
-    } else if (r < 15u) {
-        return 18u + 4u * (r - 13u) + mode;
+    }
+    if (r < 13u) {
+        return r + 5u * (mode == PSR_MODE_FIQ);
+    }
+    if (r < 15u) {
+        return r + 5u + 2u * mode;
     }
     return 26u;
 }
