@@ -2,10 +2,9 @@
 
 #include "Arm/Arm.h"
 
-#include "Archimedes/ArchimedesTimer.h"
 #include "Archimedes/ArchimedesKeyboard.h"
+#include "Archimedes/ArchimedesTimer.h"
 #include "Common/Util/BitUtil.h"
-#include "Archimedes/I2CController.h"
 
 namespace rbrown::acorn::archimedes {
 
@@ -35,6 +34,87 @@ private:
     uint8_t mask;
 };
 
+template<uint32_t Scale>
+class IocTimer {
+public:
+    explicit IocTimer(uint32_t input) :
+        inputLatch{ input },
+        outputLatch{ input },
+        counterTicks{ Scale * input } {}
+
+    template<typename F>
+    auto Update(const uint32_t elapsedTicks, const F& expiryCallback) -> void {
+        // Counter has not yet expired:
+        if (counterTicks > elapsedTicks) {
+            counterTicks -= elapsedTicks;
+            return;
+        }
+
+        // Counter has expired with non-zero input latch:
+        // Mathematics for the expired case (elapsedTicks >= counterTicks):
+        //
+        // Let:
+        //   delta = elapsedTicks - counterTicks
+        //   delta = q * Latch + r
+        //   q = delta / Latch
+        //   r = delta % Latch   (0 <= r < Latch)
+        //
+        // We want the next reload after the last expiry:
+        //
+        //   counterTicks + Latch * (q + 1) - elapsedTicks
+        //
+        // Substitute elapsedTicks = counterTicks + q * Latch + r:
+        //
+        //   counterTicks + q * Latch + Latch
+        // - counterTicks - q * Latch - r
+        //
+        // = Latch - r
+        // = Latch - (elapsedTicks - counterTicks) % Latch
+
+        if (const auto scaledInputTicks = Scale * inputLatch) {
+            counterTicks = scaledInputTicks - (elapsedTicks - counterTicks) % scaledInputTicks;
+            expiryCallback();
+            return;
+        }
+
+        // In the case where the input latch was set to zero in the interim we invoke the callback
+        // we then expire the counter. The documentation says the timer continuously reloads when the input latch
+        // is zero, but it doesn't explicitly mention if the callback should be invoked or what reload actually
+        // means, we assume here the counter is continually reloaded with zero and doesn't count down.
+        if (counterTicks) {
+            expiryCallback();
+        }
+        counterTicks = 0u;
+    }
+
+    [[nodiscard]] auto ReadOutputLatchLow() const -> uint32_t {
+        return ExtractBitField(outputLatch, 0u, 8u);
+    }
+    [[nodiscard]] auto ReadOutputLatchHigh() const -> uint32_t {
+        return ExtractBitField(outputLatch, 8u, 8u);
+    }
+    [[nodiscard]] auto ReadInputLatch() const -> uint32_t {
+        return inputLatch;
+    }
+
+    auto WriteInputLatchLow(uint32_t v) -> void {
+        inputLatch = ReplaceBitField(inputLatch, 0u, 8u, v);
+    }
+    auto WriteInputLatchHigh(uint32_t v) -> void {
+        inputLatch = ReplaceBitField(inputLatch, 8u, 8u, v);
+    }
+    auto WriteGoCommand() -> void {
+        counterTicks = Scale * inputLatch;
+    }
+    auto WriteLatchCommand() -> void {
+        outputLatch = counterTicks / Scale;
+    }
+
+private:
+    uint32_t inputLatch;
+    uint32_t outputLatch;
+    uint32_t counterTicks;
+};
 
 class ArchimedesIoc : public rbrown::arm::Interrupts {
 public:
@@ -94,10 +174,10 @@ private:
     uint8_t latchA;
     uint8_t latchB;
 
-    ReloadingTimer<1000u> timer0;
-    ReloadingTimer<1000u> timer1;
-    ReloadingTimer<1000u> timer2;
-    ReloadingTimer<1000u> timer3;
+    IocTimer<1000u> timer0;
+    IocTimer<1000u> timer1;
+    IocTimer<1000u> timer2;
+    IocTimer<1000u> timer3;
     OneShotTimer<1000u> serialTransmitTimer;
     OneShotTimer<1000u> serialReceiveTimer;
 
