@@ -53,8 +53,8 @@ private:
     constexpr static auto BPP_8 = 3u;
 
     auto WriteLogicalColourRegister(uint32_t, uint32_t) -> void;
-    auto UpdateVideoColourTable(uint32_t, uint32_t) -> void;
-    auto RebuildVideoColourTable() -> void;
+    auto UpdateDisplayColourTable(uint32_t, uint32_t) -> void;
+    auto RebuildDisplayColourTable() -> void;
     auto WriteBorderColourRegister(uint32_t) -> void;
     auto WriteCursorColourRegister(uint32_t, uint32_t) -> void;
 
@@ -148,7 +148,7 @@ private:
     VideoFifo videoFifo;
     CursorFifo cursorFifo;
 
-    std::array<uint32_t, 256> videoColourTable;
+    std::array<uint32_t, 256> displayColourTable;
     std::array<uint32_t, 4> cursorColourTable;
 };
 

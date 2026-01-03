@@ -70,7 +70,7 @@ ArchimedesVidc::ArchimedesVidc(ArchimedesMediator& m) :
     currentRaster{},
     videoFifo{ m },
     cursorFifo{ m },
-    videoColourTable{},
+    displayColourTable{},
     cursorColourTable{} {}
 
 auto ArchimedesVidc::WriteWordVideo(uint32_t v) -> void { videoFifo.WriteWord(v); }
@@ -133,23 +133,23 @@ auto ArchimedesVidc::WriteWordRegister(uint32_t v) -> void {
 
 auto ArchimedesVidc::WriteLogicalColourRegister(uint32_t r, uint32_t d) -> void {
     logicalColourRegisters[r] = d;
-    UpdateVideoColourTable(r, d);
+    UpdateDisplayColourTable(r, d);
 }
 
-auto ArchimedesVidc::UpdateVideoColourTable(uint32_t r, uint32_t d) -> void {
+auto ArchimedesVidc::UpdateDisplayColourTable(uint32_t r, uint32_t d) -> void {
     if (controlBitsPerPixel == BPP_8) {
         for (auto i = 0u; i < 16u; ++i) {
             const auto index = (i << 4u) + r;
-            videoColourTable[index] = MapLogicalColour(d, index);
+            displayColourTable[index] = MapLogicalColour(d, index);
         }
         return;
     }
-    videoColourTable[r] = MapLogicalColour(d);
+    displayColourTable[r] = MapLogicalColour(d);
 }
 
-auto ArchimedesVidc::RebuildVideoColourTable() -> void {
+auto ArchimedesVidc::RebuildDisplayColourTable() -> void {
     for (auto r = 0u; r < 16u; ++r) {
-        UpdateVideoColourTable(r, logicalColourRegisters[r]);
+        UpdateDisplayColourTable(r, logicalColourRegisters[r]);
     }
 }
 
@@ -327,7 +327,7 @@ auto ArchimedesVidc::WriteControlRegister(uint32_t d) -> void {
     controlPixelRate = ExtractBitField(d, 0u, 2u);
     controlPixelRateFrequency = PIXEL_RATE_FREQUENCIES[controlPixelRate];
     if (oldBitsPerPixel != controlBitsPerPixel) {
-        RebuildVideoColourTable();
+        RebuildDisplayColourTable();
         WriteHorizontalDisplayStartRegister(horizontalDisplayStart);
         WriteHorizontalDisplayEndRegister(horizontalDisplayEnd);
         videoFifo.SetBitsPerPixel(controlBitsPerPixel);
@@ -421,7 +421,7 @@ auto ArchimedesVidc::UpdatePixel() -> void {
             const auto cursorIndex = inCursor ? cursorFifo.ReadNext() : 0u;
             const auto colour = cursorIndex ?
                 cursorColourTable[cursorIndex] :
-                videoColourTable[displayIndex];
+                displayColourTable[displayIndex];
             mediator.WritePixel(
                 currentPixel - horizontalDisplayStartPixels,
                 currentRaster - verticalDisplayStartRasters,
