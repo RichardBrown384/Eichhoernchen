@@ -45,8 +45,8 @@ constexpr auto MapRegisterByMode(uint32_t mode, uint32_t r) {
 Arm::Arm(Memory& mem, Interrupts& interrupts) :
     memory { mem },
     interrupts { interrupts },
-    decode { .instruction = INSTRUCTION_NOOP },
-    fetch { .instruction = INSTRUCTION_NOOP },
+    decode { .instruction = INSTRUCTION_NOOP, .prefetchAbort = false },
+    fetch { .instruction = INSTRUCTION_NOOP, .prefetchAbort = false },
     regs { 0 },
     pc { VECTOR_RESET },
     psrMode { PSR_MODE_SVC },
