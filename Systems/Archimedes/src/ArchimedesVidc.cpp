@@ -70,7 +70,7 @@ ArchimedesVidc::ArchimedesVidc(ArchimedesMediator& m) :
     currentRaster{},
     videoFifo{ m },
     cursorFifo{ m },
-    videoColourTable{},
+    displayColourTable{},
     cursorColourTable{} {}
 
 auto ArchimedesVidc::WriteWordVideo(uint32_t v) -> void { videoFifo.WriteWord(v); }
@@ -133,23 +133,23 @@ auto ArchimedesVidc::WriteWordRegister(uint32_t v) -> void {
 
 auto ArchimedesVidc::WriteLogicalColourRegister(uint32_t r, uint32_t d) -> void {
     logicalColourRegisters[r] = d;
-    UpdateVideoColourTable(r, d);
+    UpdateDisplayColourTable(r, d);
 }
 
-auto ArchimedesVidc::UpdateVideoColourTable(uint32_t r, uint32_t d) -> void {
+auto ArchimedesVidc::UpdateDisplayColourTable(uint32_t r, uint32_t d) -> void {
     if (controlBitsPerPixel == BPP_8) {
         for (auto i = 0u; i < 16u; ++i) {
             const auto index = (i << 4u) + r;
-            videoColourTable[index] = MapLogicalColour(d, index);
+            displayColourTable[index] = MapLogicalColour(d, index);
         }
         return;
     }
-    videoColourTable[r] = MapLogicalColour(d);
+    displayColourTable[r] = MapLogicalColour(d);
 }
 
-auto ArchimedesVidc::RebuildVideoColourTable() -> void {
+auto ArchimedesVidc::RebuildDisplayColourTable() -> void {
     for (auto r = 0u; r < 16u; ++r) {
-        UpdateVideoColourTable(r, logicalColourRegisters[r]);
+        UpdateDisplayColourTable(r, logicalColourRegisters[r]);
     }
 }
 
@@ -327,7 +327,7 @@ auto ArchimedesVidc::WriteControlRegister(uint32_t d) -> void {
     controlPixelRate = ExtractBitField(d, 0u, 2u);
     controlPixelRateFrequency = PIXEL_RATE_FREQUENCIES[controlPixelRate];
     if (oldBitsPerPixel != controlBitsPerPixel) {
-        RebuildVideoColourTable();
+        RebuildDisplayColourTable();
         WriteHorizontalDisplayStartRegister(horizontalDisplayStart);
         WriteHorizontalDisplayEndRegister(horizontalDisplayEnd);
         videoFifo.SetBitsPerPixel(controlBitsPerPixel);
@@ -390,13 +390,16 @@ auto ArchimedesVidc::PixelIsInsideHSync(uint32_t pixel) const -> bool {
 }
 
 auto ArchimedesVidc::EndFrame() -> void {
-    if (horizontalDisplayEndPixels > horizontalDisplayStartPixels &&
-        verticalDisplayEndRasters > verticalDisplayStartRasters) {
+    const auto left = std::max(horizontalBorderStartPixels, horizontalDisplayStartPixels);
+    const auto right = std::min(horizontalDisplayEndPixels, horizontalBorderEndPixels);
+    const auto top = std::max(verticalBorderStartRasters, verticalDisplayStartRasters);
+    const auto bottom = std::min(verticalDisplayEndRasters, verticalBorderEndRasters);
+    if (right > left && bottom > top) {
         mediator.SetTextureSource(
-            0u,
-            0u,
-            horizontalDisplayEndPixels - horizontalDisplayStartPixels,
-            verticalDisplayEndRasters - verticalDisplayStartRasters);
+            left,
+            top,
+            right - left,
+            bottom - top);
     }
     mediator.FrameCompleted();
 }
@@ -412,24 +415,26 @@ auto ArchimedesVidc::Update(uint32_t time) -> void {
 }
 
 auto ArchimedesVidc::UpdatePixel() -> void {
+    // The Vidc is actively blanking unless in the border and the display
+    // Sarah Walker: the display area is set to wider than the desired screen (most likely by 16 bytes),
+    // the border area is set to actually _be_ the desired screen width, then display start & finish are
+    // shifted back and forth for soft panning.
     const auto inBorder = PixelIsInsideBorder(currentPixel, currentRaster);
     const auto inDisplay = PixelIsInsideDisplay(currentPixel, currentRaster);
     const auto inCursor = PixelIsInsideCursor(currentPixel, currentRaster);
+    const auto displayIndex = inDisplay ? videoFifo.ReadNext() : 0u;
+    const auto cursorIndex = inCursor ? cursorFifo.ReadNext() : 0u;
+
     if (inBorder) {
-        if (inDisplay) {
-            const auto displayIndex = videoFifo.ReadNext();
-            const auto cursorIndex = inCursor ? cursorFifo.ReadNext() : 0u;
-            const auto colour = cursorIndex ?
+        const auto displayColour = cursorIndex ?
                 cursorColourTable[cursorIndex] :
-                videoColourTable[displayIndex];
-            mediator.WritePixel(
-                currentPixel - horizontalDisplayStartPixels,
-                currentRaster - verticalDisplayStartRasters,
-                colour);
-        } else if (inCursor) {
-            cursorFifo.ReadNext();
-        }
+                displayColourTable[displayIndex];
+
+        const auto colour = inDisplay ? displayColour : borderColour;
+
+        mediator.WritePixel(currentPixel, currentRaster, colour);
     }
+
     if (++currentPixel < horizontalCyclePixels) {
         if (RasterIsFirstOfDisplay(currentRaster) &&
             PixelIsInsideHSync(currentPixel - 1u) &&
