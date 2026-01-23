@@ -15,7 +15,7 @@ to deliver a great user experience.
 ## Building
 
 ### Requirements
-Eichhörnchen requires C++23 and uses CMake as its build tool (3.6.0 or later).
+Eichhörnchen requires C++23 and uses CMake as its build tool (3.31.9 or later).
 
 ### Build steps
 
@@ -39,34 +39,34 @@ ctest --verbose -C debug
 
 ### Requirements
 In order to run the application you're going to require a copy of RISC OS 2.00 (or 3.00 or 3.1x) [ROMS][riscos-com]
-(⚠️Certificate not valid⚠️). Currently, the application expects RISC OS 2.00 ROM files to reside in `./bios/riscos-200` 
-relative to the application's working directory. Other versions of the OS can be used but require the use of 
-command-line switches (see below).
+(⚠️Certificate not valid⚠️).
 
-We recommend RISC OS 3.11 over other versions.
+You will need to create a Data Directory with the following structure
 
-### RISC OS 2
+```text
+DataDirectory/
+└── os/
+    ├── IC24.ROM
+    ├── IC25.ROM
+    ├── IC26.ROM
+    └── IC27.ROM
+```
+
+and you need to place your copy of RISC OS in the `os` subdirectory.
+
+If you have multiple versions RISC OS you can create a Data Directory for each version.
+
+### Running
 Assuming the application was built in a directory called `build` you can run the application with a disc image
 by typing 
 
 ```bash
-./build/Frontend/frontend archimedes your_disc.adf
+./build/Frontend/frontend archimedes --dataDirectory=<path to data directory> your_disc.adf
 ```
 
-While the application starts up hold down delete key to force RISC OS to perform a CMOS reset
-(see [#9][iss9]). If the reset was successful you will be presented with a desktop replete with Icon Bar.
-
-### RISC OS 3
-To use RISC OS 3 the application needs to be told where the RISC OS 3 ROM files reside. Start the application
-(assuming the ROM image comprises the usual 4 files) with
-
-```bash
-./build/Frontend/frontend archimedes your_disc.adf --bios-files ./bios/riscos-311/IC24.ROM ./bios/riscos-311/IC25.ROM
-./bios/riscos-311/IC26.ROM ./bios/riscos-311/IC27.ROM
-```
-
-While the application starts up hold down delete key to force RISC OS to perform a CMOS reset
-(see [#9][iss9]). If the reset was successful you will be presented with a desktop replete with Icon Bar.
+While starting Eichhörnchen for the first time hold down delete key to force RISC OS to perform a CMOS reset. 
+If the reset was successful you will be presented with a desktop replete with Icon Bar. Eichhörnchen will save a copy 
+of the CMOS RAM into the Data Directory on shut down.
 
 ## Current limitations
 
@@ -75,20 +75,18 @@ currently missing that severely impact the usability.
 
 1. Any changes made to floppy discs aren't saved when the application exits (see [#16][iss16]).
 This is currently a safety feature since protecting user data is paramount.
-2. CMOS configuration changes aren't persisted (see [#2][iss2])
-3. Switching between various versions of RISC OS is less than convenient (see [#2][iss2])
 
 ## Planned future work
 
-The focus for now will be on adding tests to those compontents that got missed during that
+The focus for now will be on adding tests to those components that got missed during that
 difficult stage of development known as staring at a blank screen and examining logfiles to
 find out why things weren't working. 
 
 After the tests have been written, the plan is to then implement missing features
-such as saving changes to floppies and persisting CMOS state before turning our 
+such as saving changes to floppies and state before turning our 
 attention towards performance.
 
-New capabilties, such a hard disc support, are postponed until the application is 
+New capabilities, such a hard disc support, are postponed until the application is 
 comparatively bug-free and performant.
 
 ## Thanks
