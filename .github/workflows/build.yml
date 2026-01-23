@@ -1,0 +1,91 @@
+name: Build, Test, and Release
+
+on:
+  pull_request:         # Run CI on PRs
+  push:
+    branches:
+      - main            # Optional: build on main pushes
+    tags:
+      - 'v*'            # Build + release on version tags
+  workflow_dispatch:    # Manual trigger
+
+jobs:
+  build:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.31.9'
+
+      - name: Set up compiler (MSVC)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Cache CMake FetchContent
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-  
+
+      - name: Configure (CMake)
+        run: |
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (CMake)
+        run: | 
+          cd build
+          cmake --build . --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure -C debug
+
+      - name: Package build output
+        if: startsWith(github.ref, 'refs/tags/v')  # Only for releases
+        run: |
+          cd build
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            powershell Compress-Archive -Path * -DestinationPath ../Eichhoernchen-${{ runner.os }}.zip
+          else
+            zip -r ../Eichhoernchen-${{ runner.os }}.zip .
+          fi
+
+      - name: Upload artifact (for debugging or release)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eichhoernchen-${{ runner.os }}
+          path: |
+            Eichhoernchen-${{ runner.os }}.zip
+            build/Testing/**/Test.xml
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/Eichhoernchen-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
