@@ -68,6 +68,15 @@ While starting Eichhörnchen for the first time hold down delete key to force RI
 If the reset was successful you will be presented with a desktop replete with Icon Bar. Eichhörnchen will save a copy 
 of the CMOS RAM into the Data Directory on shut down.
 
+## Mouse
+We currently rely on SDL 3 to manage the relative mouse input required to drive the KART interface. This
+has some downsides in that SDL 3 captures the mouse, and that makes things like dragging and resizing the
+window cumbersome.
+
+As a workaround, Eichhörnchen no longer starts up with the mouse in relative mode and in order to interact
+with the WIMP environment you have to click in the window first. This will engage relative mouse mode and
+make the mouse operative. If you switch away from Eichhörnchen the relative mouse mode is disengaged.
+
 ## Current limitations
 
 The application should be considered as pre-release material and there are a couple of nice-to-haves that are
