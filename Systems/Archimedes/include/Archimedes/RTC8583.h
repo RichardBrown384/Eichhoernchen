@@ -3,12 +3,13 @@
 #include "Archimedes/I2CBus.h"
 
 #include <array>
+#include <vector>
 
 namespace rbrown::acorn::archimedes {
 
-class RTC8583 : public I2CBus {
+class RTC8583 final : public I2CBus {
 public:
-    RTC8583();
+    explicit RTC8583(std::vector<uint8_t>);
     ~RTC8583() override = default;
     [[nodiscard]] auto ReadAddress() const -> uint8_t;
     [[nodiscard]] auto ReadRam(uint8_t) const -> uint8_t;
@@ -19,6 +20,7 @@ public:
     auto ReceiveData(uint8_t) -> bool override;
     auto StartTransmit(uint8_t&) -> bool override;
     auto EndTransmit() -> bool override;
+    [[nodiscard]] auto GetRam() const -> std::vector<uint8_t>;
 private:
     enum class State : uint8_t {
         Stopped,

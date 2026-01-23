@@ -1,6 +1,6 @@
 #include "Archimedes/RTC8583Test.h"
 
-RTC8583Test::RTC8583Test() : m_rtc{} {}
+RTC8583Test::RTC8583Test() : m_rtc{std::vector<uint8_t>()} {}
 
 auto RTC8583Test::ReadAddress() const -> uint8_t { return m_rtc.ReadAddress(); }
 auto RTC8583Test::ReadRam(uint8_t a) const -> uint8_t { return m_rtc.ReadRam(a); }

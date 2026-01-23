@@ -5,10 +5,13 @@
 
 namespace rbrown::acorn::archimedes {
 
-RTC8583::RTC8583() :
+RTC8583::RTC8583(std::vector<uint8_t> data) :
     state{ State::Stopped },
     address{},
-    ram{} {}
+    ram{} {
+    const auto size = std::min(ram.size(), data.size());
+    std::copy_n(data.begin(), size, ram.begin());
+}
 
 auto RTC8583::ReadAddress() const -> uint8_t { return address; }
 auto RTC8583::ReadRam(uint8_t a) const -> uint8_t { return ram[a]; }
@@ -71,6 +74,12 @@ auto RTC8583::EndTransmit() -> bool {
     }
     spdlog::debug("RTC8583 unexpected end transmit.");
     return false;
+}
+
+auto RTC8583::GetRam() const -> std::vector<uint8_t> {
+    auto result = std::vector<uint8_t>{};
+    std::copy_n(ram.begin(), ram.size(), std::back_inserter(result));
+    return result;
 }
 
 }

@@ -1,12 +1,12 @@
 #include "Archimedes/ArchimedesConfiguration.h"
 
-#include "Toolkit/Toolkit.h"
+#include "Common/Platform/Platform.h"
 
 #include <algorithm>
 #include <array>
 #include <utility>
 
-using namespace rbrown::toolkit;
+using namespace rbrown::platform;
 
 namespace rbrown::acorn::archimedes {
 
@@ -15,7 +15,7 @@ constexpr static auto CODE_NONE = 0xFFu;
 template<typename T>
 constexpr auto U(const T& v) { return std::to_underlying(v); }
 
-constexpr auto MapMouseMotion(float x) -> uint8_t {
+constexpr auto MapMouseMotion(const float x) -> uint8_t {
     return std::clamp(static_cast<int>(x), -64, 63) & 0x7Fu;
 }
 
@@ -148,7 +148,7 @@ consteval auto CreateScanCodeMapping() {
 }
 
 consteval auto CreateMouseButtonMapping() {
-    std::array<uint8_t, U(MouseButton::MAX)> mapping {};
+    std::array<uint8_t, U(MouseButton::MAX)> mapping{};
     mapping.fill(CODE_NONE);
     mapping[U(MouseButton::LEFT)] = 0x70u;
     mapping[U(MouseButton::MIDDLE)] = 0x71u;
@@ -159,20 +159,16 @@ consteval auto CreateMouseButtonMapping() {
 constexpr auto SCAN_CODE_MAPPING = CreateScanCodeMapping();
 constexpr auto MOUSE_BUTTON_MAPPING = CreateMouseButtonMapping();
 
-auto ArchimedesKeyboardConfiguration::MapScanCode(ScanCode k) -> std::optional<uint8_t> {
-    return (SCAN_CODE_MAPPING[U(k)] == CODE_NONE) ?
-           std::nullopt :
-           std::optional<uint8_t>{ SCAN_CODE_MAPPING[U(k)] };
+auto ArchimedesKeyboardConfiguration::MapScanCode(const ScanCode k) -> std::optional<uint8_t> {
+    return (SCAN_CODE_MAPPING[U(k)] == CODE_NONE) ? std::nullopt : std::optional{SCAN_CODE_MAPPING[U(k)]};
 }
 
-auto ArchimedesKeyboardConfiguration::MapMouseButton(MouseButton b) -> std::optional<uint8_t> {
-    return (MOUSE_BUTTON_MAPPING[U(b)] == CODE_NONE) ?
-           std::nullopt :
-           std::optional<uint8_t>{ MOUSE_BUTTON_MAPPING[U(b)] };
+auto ArchimedesKeyboardConfiguration::MapMouseButton(const MouseButton b) -> std::optional<uint8_t> {
+    return (MOUSE_BUTTON_MAPPING[U(b)] == CODE_NONE) ? std::nullopt : std::optional{MOUSE_BUTTON_MAPPING[U(b)]};
 }
 
-auto ArchimedesKeyboardConfiguration::MapMouseMotion(float x, float y) -> std::pair<uint8_t, uint8_t> {
-    return { archimedes::MapMouseMotion(x), archimedes::MapMouseMotion(-y) };
+auto ArchimedesKeyboardConfiguration::MapMouseMotion(const float x, const float y) -> std::pair<uint8_t, uint8_t> {
+    return {archimedes::MapMouseMotion(x), archimedes::MapMouseMotion(-y)};
 }
 
 }
