@@ -119,7 +119,5 @@ Eichhörnchen relies on the following libraries and the authors would like to ex
 [argparse]: https://github.com/p-ranav/argparse
 [spdlog]: https://github.com/gabime/spdlog.git
 [fmtlib]: https://github.com/fmtlib/fmt.git
-[iss2]: https://github.com/RichardBrown384/Eichhoernchen/issues/2
-[iss9]: https://github.com/RichardBrown384/Eichhoernchen/issues/9
 [iss16]: https://github.com/RichardBrown384/Eichhoernchen/issues/16
 
