@@ -17,7 +17,7 @@ add_library(archimedes
     ${ARCHIMEDES_SRC}
 )
 
-target_link_libraries(archimedes common toolkit Arm spdlog)
+target_link_libraries(archimedes common Arm spdlog)
 
 target_include_directories(archimedes
     PUBLIC

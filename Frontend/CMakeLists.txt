@@ -1,10 +1,10 @@
-SET(FRONTEND_SYSTEMS_SRC
-    src/Factories/ArchimedesFactory.cpp
-)
-
 add_executable(frontend
-    ${FRONTEND_SYSTEMS_SRC}
+    src/CommandLine/ArgumentParser.cpp
+    src/Host/FrontendHost.cpp
+    src/Host/FrontendInput.cpp
+    src/FileSystem.cpp
     src/Main.cpp
+    src/Toolkit.cpp
 )
 
 target_include_directories(
@@ -14,9 +14,15 @@ target_include_directories(
 )
 
 target_link_libraries(frontend
-    toolkit
+    PRIVATE
+# 3rd party
+    argparse
+    SDL3::SDL3
+    zip
+# Internal
+    common
     archimedes
-    argparse)
+)
 
 target_compile_options(
     frontend
