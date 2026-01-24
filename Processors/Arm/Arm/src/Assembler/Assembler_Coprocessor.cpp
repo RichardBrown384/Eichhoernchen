@@ -1,8 +1,6 @@
 #include "Assembler/Assembler_Impl.h"
 #include "Assembler/SourceLine.h"
 
-#include "Common/Encode.h"
-
 using namespace rbrown::arm;
 
 auto Assembler::AssembleCoprocessorCoprocessorArgument(SourceLine& source, uint32_t& n) -> bool {

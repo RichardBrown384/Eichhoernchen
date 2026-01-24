@@ -7,14 +7,14 @@
 using namespace rbrown::arm;
 
 struct Assembler::CoprocessorRegisterTransfersInstruction {
-    uint32_t conditionCode;
-    uint32_t cpOpc;
-    uint32_t l;
-    uint32_t crn;
-    uint32_t rd;
-    uint32_t cpn;
-    uint32_t cp;
-    uint32_t crm;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t cpOpc{};
+    uint32_t l{};
+    uint32_t crn{};
+    uint32_t rd{};
+    uint32_t cpn{};
+    uint32_t cp{};
+    uint32_t crm{};
 };
 
 auto Assembler::AssembleMcr(SourceLine& source, uint32_t& result) -> bool {
@@ -26,8 +26,7 @@ auto Assembler::AssembleMrc(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleLoadCoprocessorRegisterTransfersInstruction(SourceLine& source, uint32_t& result) -> bool {
-    CoprocessorRegisterTransfersInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+    CoprocessorRegisterTransfersInstruction instruction {
         .l = 1u
     };
     if (AssembleCoprocessorRegisterTransfersInstruction(source, instruction)) {
@@ -38,10 +37,7 @@ auto Assembler::AssembleLoadCoprocessorRegisterTransfersInstruction(SourceLine& 
 }
 
 auto Assembler::AssembleStoreCoprocessorRegisterTransfersInstruction(SourceLine& source, uint32_t& result) -> bool {
-    CoprocessorRegisterTransfersInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL
-    };
-    if (AssembleCoprocessorRegisterTransfersInstruction(source, instruction)) {
+    if (CoprocessorRegisterTransfersInstruction instruction {}; AssembleCoprocessorRegisterTransfersInstruction(source, instruction)) {
         result = EncodeCoprocessorRegisterTransfersInstruction(instruction);
         return true;
     }
@@ -51,7 +47,8 @@ auto Assembler::AssembleStoreCoprocessorRegisterTransfersInstruction(SourceLine&
 auto Assembler::AssembleCoprocessorRegisterTransfersInstruction(SourceLine& source, CoprocessorRegisterTransfersInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleCoprocessorRegisterTransfersInstructionArguments(source, instruction);
-    } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         return AssembleCoprocessorRegisterTransfersInstructionArguments(source, instruction);
     }
     return false;

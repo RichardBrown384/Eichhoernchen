@@ -8,10 +8,9 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
         if (source.MatchAndAdvance('D')) {
             if (source.MatchAndAdvance('C')) {
                 return AssembleAdc(source, result);
-            } else {
-                if (source.MatchAndAdvance('D')) {
-                    return AssembleAdd(source, result);
-                }
+            }
+            if (source.MatchAndAdvance('D')) {
+                return AssembleAdd(source, result);
             }
         } else {
             if (source.MatchAndAdvance('N')) {
@@ -37,7 +36,8 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
             } else if (source.MatchAndAdvance('M')) {
                 if (source.MatchAndAdvance('N')) {
                     return AssembleCmn(source, result);
-                } else if (source.MatchAndAdvance('P')) {
+                }
+                if (source.MatchAndAdvance('P')) {
                     return AssembleCmp(source, result);
                 }
             }
@@ -51,9 +51,11 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
             if (source.MatchAndAdvance('D')) {
                 if (source.MatchAndAdvance('C')) {
                     return AssembleLdc(source, result);
-                } else if (source.MatchAndAdvance('R')) {
+                }
+                if (source.MatchAndAdvance('R')) {
                     return AssembleLdr(source, result);
-                } else if (source.MatchAndAdvance('M')) {
+                }
+                if (source.MatchAndAdvance('M')) {
                     return AssembleLdm(source, result);
                 }
             }
@@ -93,7 +95,8 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
             if (source.MatchAndAdvance('S')) {
                 if (source.MatchAndAdvance('B')) {
                     return AssembleRsb(source, result);
-                } else if (source.MatchAndAdvance('C')) {
+                }
+                if (source.MatchAndAdvance('C')) {
                     return AssembleRsc(source, result);
                 }
             }
@@ -105,9 +108,11 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
             } else if (source.MatchAndAdvance('T')) {
                 if (source.MatchAndAdvance('C')) {
                     return AssembleStc(source, result);
-                } else if (source.MatchAndAdvance('R')) {
+                }
+                if (source.MatchAndAdvance('R')) {
                     return AssembleStr(source, result);
-                } else if (source.MatchAndAdvance('M')) {
+                }
+                if (source.MatchAndAdvance('M')) {
                     return AssembleStm(source, result);
                 }
             } else if (source.MatchAndAdvance('U')) {
@@ -117,7 +122,8 @@ auto Assembler::Assemble(SourceLine& source, uint32_t& result) -> bool {
             } else if (source.MatchAndAdvance('W')) {
                 if (source.MatchAndAdvance('I')) {
                     return AssembleSwi(source, result);
-                } else if (source.MatchAndAdvance('P')) {
+                }
+                if (source.MatchAndAdvance('P')) {
                     return AssembleSwp(source, result);
                 }
             }

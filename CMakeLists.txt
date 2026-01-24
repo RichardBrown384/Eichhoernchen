@@ -115,7 +115,9 @@ if(MSVC)
 else()
   set(EMULATOR_COMPILER_FLAGS
     -Wall -Wextra -pedantic -Werror
-    -Wno-unused-parameter -Wno-unused-function
+    -Wno-unused-parameter
+    -Wno-unused-function
+    -Wmissing-designated-field-initializers
     #-Wconversion -Wsign-conversion
   )
 endif()

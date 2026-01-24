@@ -9,14 +9,13 @@
 using namespace rbrown::arm;
 
 struct Assembler::BranchInstruction {
-    uint32_t conditionCode;
-    uint32_t l;
-    uint32_t offset;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t l{};
+    uint32_t offset{};
 };
 
-constexpr auto EncodeBranchInstructionOffset(uint32_t n, uint32_t& offset) -> bool {
-    const auto m = ArithmeticShiftRight(n - 8u, 2u);
-    if (SignExtend24(m) == m) {
+constexpr auto EncodeBranchInstructionOffset(const uint32_t n, uint32_t& offset) -> bool {
+    if (const auto m = ArithmeticShiftRight(n - 8u, 2u); m == SignExtend24(m)) {
         offset = m;
         return true;
     }
@@ -28,10 +27,7 @@ auto Assembler::AssembleB(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleBranchInstruction(SourceLine& source, uint32_t& result) -> bool {
-    BranchInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
-    };
-    if (AssembleBranchInstruction(source, instruction)) {
+    if (BranchInstruction instruction {}; AssembleBranchInstruction(source, instruction)) {
         result = EncodeBranchInstruction(instruction);
         return true;
     }
@@ -41,25 +37,24 @@ auto Assembler::AssembleBranchInstruction(SourceLine& source, uint32_t& result) 
 auto Assembler::AssembleBranchInstruction(SourceLine& source, BranchInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleBranchInstructionOffset(source, instruction);
-    } else {
-        if (source.MatchAndAdvance('L')) {
-            instruction.l = 1u;
-            if (source.MatchWhitespace()) {
-                return AssembleBranchInstructionOffset(source, instruction);
-            } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-                return AssembleBranchInstructionOffset(source, instruction);
-            }
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+    }
+    if (source.MatchAndAdvance('L')) {
+        instruction.l = 1u;
+        if (source.MatchWhitespace()) {
             return AssembleBranchInstructionOffset(source, instruction);
         }
+        if (AssembleConditionCode(source, instruction.conditionCode)) {
+            return AssembleBranchInstructionOffset(source, instruction);
+        }
+    } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+        return AssembleBranchInstructionOffset(source, instruction);
     }
     return false;
 }
 
 auto Assembler::AssembleBranchInstructionOffset(SourceLine& source, BranchInstruction& instruction) -> bool {
     if (source.MatchAndAdvanceWhitespace()) {
-        uint32_t n;
-        if (AssembleBranchOffsetNumber(source, n)) {
+        if (uint32_t n; AssembleBranchOffsetNumber(source, n)) {
             return EncodeBranchInstructionOffset(n, instruction.offset);
         }
     }

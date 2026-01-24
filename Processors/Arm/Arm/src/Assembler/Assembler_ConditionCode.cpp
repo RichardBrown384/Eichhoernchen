@@ -16,7 +16,8 @@ auto Assembler::AssembleConditionCode(SourceLine& source, uint32_t& conditionCod
             if (source.MatchAndAdvance('C')) {
                 conditionCode = CONDITION_CODE_CC;
                 return true;
-            } else if (source.MatchAndAdvance('S')) {
+            }
+            if (source.MatchAndAdvance('S')) {
                 conditionCode = CONDITION_CODE_CS;
                 return true;
             }
@@ -29,7 +30,8 @@ auto Assembler::AssembleConditionCode(SourceLine& source, uint32_t& conditionCod
             if (source.MatchAndAdvance('E')) {
                 conditionCode = CONDITION_CODE_GE;
                 return true;
-            } else if (source.MatchAndAdvance('T')) {
+            }
+            if (source.MatchAndAdvance('T')) {
                 conditionCode = CONDITION_CODE_GT;
                 return true;
             }
@@ -42,10 +44,12 @@ auto Assembler::AssembleConditionCode(SourceLine& source, uint32_t& conditionCod
             if (source.MatchAndAdvance('E')) {
                 conditionCode = CONDITION_CODE_LE;
                 return true;
-            } else if (source.MatchAndAdvance('S')) {
+            }
+            if (source.MatchAndAdvance('S')) {
                 conditionCode = CONDITION_CODE_LS;
                 return true;
-            } else if (source.MatchAndAdvance('T')) {
+            }
+            if (source.MatchAndAdvance('T')) {
                 conditionCode = CONDITION_CODE_LT;
                 return true;
             }
@@ -58,7 +62,8 @@ auto Assembler::AssembleConditionCode(SourceLine& source, uint32_t& conditionCod
             if (source.MatchAndAdvance('E')) {
                 conditionCode = CONDITION_CODE_NE;
                 return true;
-            } else if (source.MatchAndAdvance('V')) {
+            }
+            if (source.MatchAndAdvance('V')) {
                 conditionCode = CONDITION_CODE_NV;
                 return true;
             }
@@ -71,7 +76,8 @@ auto Assembler::AssembleConditionCode(SourceLine& source, uint32_t& conditionCod
             if (source.MatchAndAdvance('C')) {
                 conditionCode = CONDITION_CODE_VC;
                 return true;
-            } else if (source.MatchAndAdvance('S')) {
+            }
+            if (source.MatchAndAdvance('S')) {
                 conditionCode = CONDITION_CODE_VS;
                 return true;
             }

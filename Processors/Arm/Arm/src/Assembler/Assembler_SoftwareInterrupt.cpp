@@ -7,8 +7,8 @@
 using namespace rbrown::arm;
 
 struct Assembler::SoftwareInterruptInstruction {
-    uint32_t conditionCode;
-    uint32_t comment;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t comment{};
 };
 
 auto Assembler::AssembleSwi(SourceLine& source, uint32_t& result) -> bool {
@@ -16,10 +16,7 @@ auto Assembler::AssembleSwi(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleSoftwareInterruptInstruction(SourceLine& source, uint32_t& result) -> bool {
-    SoftwareInterruptInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
-    };
-    if (AssembleSoftwareInterruptInstruction(source, instruction)) {
+    if (SoftwareInterruptInstruction instruction {}; AssembleSoftwareInterruptInstruction(source, instruction)) {
         result = EncodeSoftwareInterruptInstruction(instruction);
         return true;
     }
@@ -29,7 +26,8 @@ auto Assembler::AssembleSoftwareInterruptInstruction(SourceLine& source, uint32_
 auto Assembler::AssembleSoftwareInterruptInstruction(SourceLine& source, SoftwareInterruptInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleSoftwareInterruptInstructionComment(source, instruction);
-    } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         return AssembleSoftwareInterruptInstructionComment(source, instruction);
     }
     return false;

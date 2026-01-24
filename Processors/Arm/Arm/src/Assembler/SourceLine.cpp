@@ -17,9 +17,8 @@ auto SourceLine::Advance() -> void {
     pos = pos + 1u;
 }
 
-auto SourceLine::Match(char c) const -> bool {
-    char m;
-    if (GetCurrentCharacter(m)) {
+auto SourceLine::Match(const char c) const -> bool {
+    if (char m; GetCurrentCharacter(m)) {
         return m == c;
     }
     return false;
@@ -29,7 +28,7 @@ auto SourceLine::MatchWhitespace() const -> bool {
     return Match(' ');
 }
 
-auto SourceLine::MatchAndAdvance(char c) -> bool {
+auto SourceLine::MatchAndAdvance(const char c) -> bool {
     if (Match(c)) {
         Advance();
         return true;
@@ -48,9 +47,9 @@ auto SourceLine::MatchAndAdvanceCommaWhitespace() -> bool {
     return false;
 }
 
-auto SourceLine::MatchAndAdvanceNumber(int base, unsigned long& result) -> bool {
+auto SourceLine::MatchAndAdvanceNumber(const int base, unsigned long& result) -> bool {
     if (pos < len) {
-        std::string sub = line.substr(pos, len - pos);
+        const auto sub = line.substr(pos, len - pos);
         size_t idx;
         result = std::stoul(sub, &idx, base);
         pos += idx;

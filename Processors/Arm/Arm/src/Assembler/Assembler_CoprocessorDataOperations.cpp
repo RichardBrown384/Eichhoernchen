@@ -7,13 +7,13 @@
 using namespace rbrown::arm;
 
 struct Assembler::CoprocessorDataOperationsInstruction {
-    uint32_t conditionCode;
-    uint32_t cpOpc;
-    uint32_t crn;
-    uint32_t crd;
-    uint32_t cpn;
-    uint32_t cp;
-    uint32_t crm;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t cpOpc{};
+    uint32_t crn{};
+    uint32_t crd{};
+    uint32_t cpn{};
+    uint32_t cp{};
+    uint32_t crm{};
 };
 
 auto Assembler::AssembleCdp(SourceLine& source, uint32_t& result) -> bool {
@@ -21,10 +21,7 @@ auto Assembler::AssembleCdp(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleCoprocessorDataOperationsInstruction(SourceLine& source, uint32_t& result) -> bool {
-    CoprocessorDataOperationsInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
-    };
-    if (AssembleCoprocessorDataOperationsInstruction(source, instruction)) {
+    if (CoprocessorDataOperationsInstruction instruction {}; AssembleCoprocessorDataOperationsInstruction(source, instruction)) {
         result = EncodeCoprocessorDataOperationsInstruction(instruction);
         return true;
     }
@@ -34,7 +31,8 @@ auto Assembler::AssembleCoprocessorDataOperationsInstruction(SourceLine& source,
 auto Assembler::AssembleCoprocessorDataOperationsInstruction(SourceLine& source, CoprocessorDataOperationsInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleCoprocessorDataOperationsInstructionArguments(source, instruction);
-    } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         return AssembleCoprocessorDataOperationsInstructionArguments(source, instruction);
     }
     return false;

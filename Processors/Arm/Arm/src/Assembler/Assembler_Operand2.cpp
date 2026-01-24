@@ -6,22 +6,21 @@
 
 using namespace rbrown::arm;
 
-constexpr auto EncodeInstructionSpecifiedShift(uint32_t shiftAmount, uint32_t shiftType) {
+constexpr auto EncodeInstructionSpecifiedShift(const uint32_t shiftAmount, const uint32_t shiftType) {
     return ((shiftAmount & 0x1Fu) << 3u) + ((shiftType & 0x3u) << 1u);
 }
 
-constexpr auto EncodeRegisterSpecifiedShift(uint32_t rs, uint32_t shiftType) {
+constexpr auto EncodeRegisterSpecifiedShift(const uint32_t rs, const uint32_t shiftType) {
     return ((rs & 0xFu) << 4u) + ((shiftType & 0x3u) << 1u) + 1u;
 }
 
-constexpr auto EncodeShiftTypeOperand2(uint32_t shift, uint32_t rm) {
+constexpr auto EncodeShiftTypeOperand2(const uint32_t shift, const uint32_t rm) {
     return ((shift & 0xFFu) << 4u) + (rm & 0xFu);
 }
 
-constexpr auto EncodeImmediateTypeOperand2(uint32_t immediate, uint32_t& op2) {
+constexpr auto EncodeImmediateTypeOperand2(const uint32_t immediate, uint32_t& op2) {
     for (auto rotate = 0u; rotate < 16u; rotate++) {
-        const auto imm = RotateLeft(immediate, rotate << 1u);
-        if (imm < 0x100u) {
+        if (const auto imm = RotateLeft(immediate, rotate << 1u); imm < 0x100u) {
             op2 = (rotate << 8u) + imm;
             return true;
         }
@@ -30,11 +29,9 @@ constexpr auto EncodeImmediateTypeOperand2(uint32_t immediate, uint32_t& op2) {
 }
 
 auto Assembler::AssembleShiftTypeOperand2(SourceLine& source, uint32_t& op2) -> bool {
-    uint32_t shift;
-    uint32_t rm;
-    if (AssembleRegisterNumber(source, rm)) {
+    if (uint32_t rm; AssembleRegisterNumber(source, rm)) {
         if (source.MatchAndAdvanceCommaWhitespace()) {
-            if (AssembleShiftTypeOperand2Shift(source, shift)) {
+            if (uint32_t shift; AssembleShiftTypeOperand2Shift(source, shift)) {
                 op2 = EncodeShiftTypeOperand2(shift, rm);
                 return true;
             }
@@ -58,7 +55,8 @@ auto Assembler::AssembleShiftTypeOperand2Shift(SourceLine& source, uint32_t& shi
             if (source.MatchAndAdvance('S')) {
                 if (source.MatchAndAdvance('L')) {
                     return AssembleLSL(source, shift);
-                } else if (source.MatchAndAdvance('R')) {
+                }
+                if (source.MatchAndAdvance('R')) {
                     return AssembleLSR(source, shift);
                 }
             }
@@ -78,14 +76,13 @@ auto Assembler::AssembleShiftTypeOperand2Shift(SourceLine& source, uint32_t& shi
 }
 
 auto Assembler::AssembleLSL(SourceLine& source, uint32_t& shift) -> bool {
-    uint32_t shiftAmount, rs;
     if (source.MatchAndAdvanceWhitespace()) {
-        if (AssembleShiftAmountNumber(source, shiftAmount)) {
+        if (uint32_t shiftAmount; AssembleShiftAmountNumber(source, shiftAmount)) {
             if (shiftAmount < 32u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_LSL);
                 return true;
             }
-        } else if (AssembleRegisterNumber(source, rs)) {
+        } else if (uint32_t rs; AssembleRegisterNumber(source, rs)) {
             shift = EncodeRegisterSpecifiedShift(rs, SHIFT_TYPE_LSL);
             return true;
         }
@@ -94,17 +91,17 @@ auto Assembler::AssembleLSL(SourceLine& source, uint32_t& shift) -> bool {
 }
 
 auto Assembler::AssembleLSR(SourceLine& source, uint32_t& shift) -> bool {
-    uint32_t shiftAmount, rs;
     if (source.MatchAndAdvanceWhitespace()) {
-        if (AssembleShiftAmountNumber(source, shiftAmount)) {
+        if (uint32_t shiftAmount; AssembleShiftAmountNumber(source, shiftAmount)) {
             if (shiftAmount == 0u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_LSL);
                 return true;
-            } else if (shiftAmount < 33u) {
+            }
+            if (shiftAmount < 33u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_LSR);
                 return true;
             }
-        } else if (AssembleRegisterNumber(source, rs)) {
+        } else if (uint32_t rs; AssembleRegisterNumber(source, rs)) {
             shift = EncodeRegisterSpecifiedShift(rs, SHIFT_TYPE_LSR);
             return true;
         }
@@ -113,17 +110,17 @@ auto Assembler::AssembleLSR(SourceLine& source, uint32_t& shift) -> bool {
 }
 
 auto Assembler::AssembleASR(SourceLine& source, uint32_t& shift) -> bool {
-    uint32_t shiftAmount, rs;
     if (source.MatchAndAdvanceWhitespace()) {
-        if (AssembleShiftAmountNumber(source, shiftAmount)) {
+        if (uint32_t shiftAmount; AssembleShiftAmountNumber(source, shiftAmount)) {
             if (shiftAmount == 0u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_LSL);
                 return true;
-            } else if (shiftAmount < 33u) {
+            }
+            if (shiftAmount < 33u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_ASR);
                 return true;
             }
-        } else if (AssembleRegisterNumber(source, rs)) {
+        } else if (uint32_t rs; AssembleRegisterNumber(source, rs)) {
             shift = EncodeRegisterSpecifiedShift(rs, SHIFT_TYPE_ASR);
             return true;
         }
@@ -132,17 +129,17 @@ auto Assembler::AssembleASR(SourceLine& source, uint32_t& shift) -> bool {
 }
 
 auto Assembler::AssembleROR(SourceLine& source, uint32_t& shift) -> bool {
-    uint32_t shiftAmount, rs;
     if (source.MatchAndAdvanceWhitespace()) {
-        if (AssembleShiftAmountNumber(source, shiftAmount)) {
+        if (uint32_t shiftAmount; AssembleShiftAmountNumber(source, shiftAmount)) {
             if (shiftAmount == 0u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_LSL);
                 return true;
-            } else if (shiftAmount < 32u) {
+            }
+            if (shiftAmount < 32u) {
                 shift = EncodeInstructionSpecifiedShift(shiftAmount, SHIFT_TYPE_ROR);
                 return true;
             }
-        } else if (AssembleRegisterNumber(source, rs)) {
+        } else if (uint32_t rs; AssembleRegisterNumber(source, rs)) {
             shift = EncodeRegisterSpecifiedShift(rs, SHIFT_TYPE_ROR);
             return true;
         }
@@ -161,8 +158,7 @@ auto Assembler::AssembleRRX(SourceLine& source, uint32_t& shift) -> bool {
 }
 
 auto Assembler::AssembleImmediateTypeOperand2(SourceLine& source, uint32_t& op2) -> bool {
-    uint32_t immediate;
-    if (AssembleImmediateNumber(source, immediate)) {
+    if (uint32_t immediate; AssembleImmediateNumber(source, immediate)) {
         return EncodeImmediateTypeOperand2(immediate, op2);
     }
     return false;

@@ -7,11 +7,11 @@
 using namespace rbrown::arm;
 
 struct Assembler::SwapInstruction {
-    uint32_t conditionCode;
-    uint32_t b;
-    uint32_t rn;
-    uint32_t rd;
-    uint32_t rm;
+    uint32_t conditionCode {CONDITION_CODE_AL};
+    uint32_t b{};
+    uint32_t rn{};
+    uint32_t rd{};
+    uint32_t rm{};
 };
 
 auto Assembler::AssembleSwp(SourceLine& source, uint32_t& result) -> bool {
@@ -19,10 +19,7 @@ auto Assembler::AssembleSwp(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleSwapInstruction(SourceLine& source, uint32_t& result) -> bool {
-    SwapInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
-    };
-    if (AssembleSwapInstruction(source, instruction)) {
+    if (SwapInstruction instruction {}; AssembleSwapInstruction(source, instruction)) {
         result = EncodeSwapInstruction(instruction);
         return true;
     }
@@ -32,16 +29,16 @@ auto Assembler::AssembleSwapInstruction(SourceLine& source, uint32_t& result) ->
 auto Assembler::AssembleSwapInstruction(SourceLine& source, SwapInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleSwapArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('B')) {
+        instruction.b = 1u;
+        return AssembleSwapArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         if (source.MatchAndAdvance('B')) {
             instruction.b = 1u;
-            return AssembleSwapArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchAndAdvance('B')) {
-                instruction.b = 1u;
-            }
-            return AssembleSwapArguments(source, instruction);
         }
+        return AssembleSwapArguments(source, instruction);
     }
     return false;
 }

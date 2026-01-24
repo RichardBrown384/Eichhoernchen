@@ -7,13 +7,13 @@
 using namespace rbrown::arm;
 
 struct Assembler::MultiplyInstruction {
-    uint32_t conditionCode;
-    uint32_t accumulate;
-    uint32_t s;
-    uint32_t rd;
-    uint32_t rm;
-    uint32_t rs;
-    uint32_t rn;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t accumulate{};
+    uint32_t s{};
+    uint32_t rd{};
+    uint32_t rm{};
+    uint32_t rs{};
+    uint32_t rn{};
 };
 
 auto Assembler::AssembleMla(SourceLine& source, uint32_t& result) -> bool {
@@ -25,8 +25,7 @@ auto Assembler::AssembleMul(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleMultiplyAccumulateInstruction(SourceLine& source, uint32_t& result) -> bool {
-    MultiplyInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+    MultiplyInstruction instruction {
         .accumulate = 1u
     };
     if (AssembleMultiplyAccumulateInstruction(source, instruction)) {
@@ -39,16 +38,16 @@ auto Assembler::AssembleMultiplyAccumulateInstruction(SourceLine& source, uint32
 auto Assembler::AssembleMultiplyAccumulateInstruction(SourceLine& source, MultiplyInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleMultiplyAccumulateArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('S')) {
+        instruction.s = 1u;
+        return AssembleMultiplyAccumulateArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         if (source.MatchAndAdvance('S')) {
             instruction.s = 1u;
-            return AssembleMultiplyAccumulateArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchAndAdvance('S')) {
-                instruction.s = 1u;
-            }
-            return AssembleMultiplyAccumulateArguments(source, instruction);
         }
+        return AssembleMultiplyAccumulateArguments(source, instruction);
     }
     return false;
 }
@@ -65,10 +64,7 @@ auto Assembler::AssembleMultiplyAccumulateArguments(SourceLine& source, Multiply
 }
 
 auto Assembler::AssembleMultiplyInstruction(SourceLine& source, uint32_t& result) -> bool {
-    MultiplyInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
-    };
-    if (AssembleMultiplyInstruction(source, instruction)) {
+    if (MultiplyInstruction instruction {}; AssembleMultiplyInstruction(source, instruction)) {
         result = EncodeMultiplyInstruction(instruction);
         return true;
     }
@@ -78,16 +74,16 @@ auto Assembler::AssembleMultiplyInstruction(SourceLine& source, uint32_t& result
 auto Assembler::AssembleMultiplyInstruction(SourceLine& source, MultiplyInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleMultiplyArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('S')) {
+        instruction.s = 1u;
+        return AssembleMultiplyArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         if (source.MatchAndAdvance('S')) {
             instruction.s = 1u;
-            return AssembleMultiplyArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchAndAdvance('S')) {
-                instruction.s = 1u;
-            }
-            return AssembleMultiplyArguments(source, instruction);
         }
+        return AssembleMultiplyArguments(source, instruction);
     }
     return false;
 }
