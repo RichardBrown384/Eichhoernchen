@@ -7,16 +7,16 @@
 using namespace rbrown::arm;
 
 struct Assembler::CoprocessorDataTransferInstruction {
-    uint32_t conditionCode;
-    uint32_t p;
-    uint32_t u;
-    uint32_t n;
-    uint32_t w;
-    uint32_t l;
-    uint32_t rn;
-    uint32_t crd;
-    uint32_t cpn;
-    uint32_t offset;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t p{};
+    uint32_t u{};
+    uint32_t n{};
+    uint32_t w{};
+    uint32_t l{};
+    uint32_t rn{};
+    uint32_t crd{};
+    uint32_t cpn{};
+    uint32_t offset{};
 };
 
 auto Assembler::AssembleLdc(SourceLine& source, uint32_t& result) -> bool {
@@ -28,8 +28,7 @@ auto Assembler::AssembleStc(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleLoadCoprocessorDataTransferInstruction(SourceLine& source, uint32_t& result) -> bool {
-    CoprocessorDataTransferInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+    CoprocessorDataTransferInstruction instruction {
         .p = 1u,
         .u = 1u,
         .l = 1u
@@ -42,8 +41,7 @@ auto Assembler::AssembleLoadCoprocessorDataTransferInstruction(SourceLine& sourc
 }
 
 auto Assembler::AssembleStoreCoprocessorDataTransferInstruction(SourceLine& source, uint32_t& result) -> bool {
-    CoprocessorDataTransferInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+    CoprocessorDataTransferInstruction instruction {
         .p = 1u,
         .u = 1u
     };
@@ -57,17 +55,18 @@ auto Assembler::AssembleStoreCoprocessorDataTransferInstruction(SourceLine& sour
 auto Assembler::AssembleCoprocessorDataTransferInstruction(SourceLine& source, CoprocessorDataTransferInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('L')) {
+        instruction.n = 1u;
+        return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
+        if (source.MatchWhitespace()) {
+            return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
+        }
         if (source.MatchAndAdvance('L')) {
             instruction.n = 1u;
             return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchWhitespace()) {
-                return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
-            } else if (source.MatchAndAdvance('L')) {
-                instruction.n = 1u;
-                return AssembleCoprocessorDataTransferInstructionArguments(source, instruction);
-            }
         }
     }
     return false;
@@ -122,8 +121,7 @@ auto Assembler::AssembleCoprocessorDataTransferInstructionAddress(SourceLine& so
 }
 
 auto Assembler::AssembleCoprocessorDataTransferInstructionOffset(SourceLine& source, CoprocessorDataTransferInstruction& instruction) -> bool {
-    uint32_t u, offset;
-    if (AssembleTransferOffsetNumber(source, u, offset)) {
+    if (uint32_t u, offset; AssembleTransferOffsetNumber(source, u, offset)) {
         if ((offset & ~(0xFFu << 2u)) == 0u) {
             instruction.u = u;
             instruction.offset = offset >> 2u;

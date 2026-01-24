@@ -1,16 +1,13 @@
 #include "Assembler/Assembler_Impl.h"
 #include "Assembler/SourceLine.h"
 
-#include "Common/Shifts.h"
-
 using namespace rbrown::arm;
 
 auto Assembler::AssembleRegisterNumber(SourceLine& source, uint32_t& r) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('R')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            r = (uint32_t) matched;
+            r = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -32,11 +29,10 @@ auto Assembler::AssembleWhitespaceCommaRegisterNumber(SourceLine& source, uint32
 }
 
 auto Assembler::AssembleShiftAmountNumber(SourceLine& source, uint32_t& shiftAmount) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            shiftAmount = (uint32_t) matched;
+            shiftAmount = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -44,11 +40,10 @@ auto Assembler::AssembleShiftAmountNumber(SourceLine& source, uint32_t& shiftAmo
 }
 
 auto Assembler::AssembleImmediateNumber(SourceLine& source, uint32_t& immediate) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
-        if (source.MatchAndAdvanceNumber(0, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(0, matched)) {
             // TODO range checks
-            immediate = (uint32_t) matched;
+            immediate = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -56,16 +51,15 @@ auto Assembler::AssembleImmediateNumber(SourceLine& source, uint32_t& immediate)
 }
 
 auto Assembler::AssembleTransferOffsetNumber(SourceLine& source, uint32_t& u, uint32_t& offset) -> bool {
-    uint32_t sign = 1u;
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
+        uint32_t sign = 1u;
         if (source.MatchAndAdvance('-')) {
             sign = 0u;
         }
-        if (source.MatchAndAdvanceNumber(0, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(0, matched)) {
             // TODO range checks
             u = sign;
-            offset = (uint32_t) matched;
+            offset = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -73,11 +67,10 @@ auto Assembler::AssembleTransferOffsetNumber(SourceLine& source, uint32_t& u, ui
 }
 
 auto Assembler::AssembleBranchOffsetNumber(SourceLine& source, uint32_t& offset) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
-        if (source.MatchAndAdvanceNumber(0, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(0, matched)) {
             // TODO range checks
-            offset = (uint32_t) matched;
+            offset = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -85,11 +78,10 @@ auto Assembler::AssembleBranchOffsetNumber(SourceLine& source, uint32_t& offset)
 }
 
 auto Assembler::AssembleCoprocessorNumber(SourceLine& source, uint32_t& n) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('p')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            n = (uint32_t) matched;
+            n = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -97,11 +89,10 @@ auto Assembler::AssembleCoprocessorNumber(SourceLine& source, uint32_t& n) -> bo
 }
 
 auto Assembler::AssembleCoprocessorRegisterNumber(SourceLine& source, uint32_t& r) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('c')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            r = (uint32_t) matched;
+            r = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -109,11 +100,10 @@ auto Assembler::AssembleCoprocessorRegisterNumber(SourceLine& source, uint32_t& 
 }
 
 auto Assembler::AssembleCoprocessorOpcodeNumber(SourceLine& source, uint32_t& op) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            op = (uint32_t) matched;
+            op = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -121,11 +111,10 @@ auto Assembler::AssembleCoprocessorOpcodeNumber(SourceLine& source, uint32_t& op
 }
 
 auto Assembler::AssembleCoprocessorInformationNumber(SourceLine& source, uint32_t& cp) -> bool {
-    unsigned long matched;
     if (source.MatchAndAdvance('#')) {
-        if (source.MatchAndAdvanceNumber(10, matched)) {
+        if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
             // TODO range checks
-            cp = (uint32_t) matched;
+            cp = static_cast<uint32_t>(matched);
             return true;
         }
     }
@@ -133,10 +122,9 @@ auto Assembler::AssembleCoprocessorInformationNumber(SourceLine& source, uint32_
 }
 
 auto Assembler::AssembleSoftwareInterruptCommentNumber(SourceLine& source, uint32_t& comment) -> bool {
-    unsigned long matched;
-    if (source.MatchAndAdvanceNumber(10, matched)) {
+    if (unsigned long matched; source.MatchAndAdvanceNumber(10, matched)) {
         // TODO range checks
-        comment = (uint32_t) matched;
+        comment = static_cast<uint32_t>(matched);
         return true;
     }
     return false;

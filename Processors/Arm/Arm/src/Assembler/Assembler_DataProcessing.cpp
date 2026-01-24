@@ -7,13 +7,13 @@
 using namespace rbrown::arm;
 
 struct Assembler::DataProcessingInstruction {
-    uint32_t conditionCode;
-    uint32_t immediate;
-    uint32_t opcode;
-    uint32_t s;
-    uint32_t rn;
-    uint32_t rd;
-    uint32_t op2;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t immediate{};
+    uint32_t opcode{};
+    uint32_t s{};
+    uint32_t rn{};
+    uint32_t rd{};
+    uint32_t op2{};
 };
 
 auto Assembler::AssembleAdc(SourceLine& source, uint32_t& result) -> bool {
@@ -80,9 +80,8 @@ auto Assembler::AssembleTst(SourceLine& source, uint32_t& result) -> bool {
     return AssembleCompareDataProcessingInstruction(source, DATA_OPCODE_TST, result);
 }
 
-auto Assembler::AssembleDataProcessingInstruction(SourceLine& source, uint32_t opcode, uint32_t& result) -> bool{
-    DataProcessingInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+auto Assembler::AssembleDataProcessingInstruction(SourceLine& source, const uint32_t opcode, uint32_t& result) -> bool{
+    DataProcessingInstruction instruction {
         .opcode = opcode
     };
     if (AssembleDataProcessingInstruction(source, instruction)) {
@@ -95,16 +94,16 @@ auto Assembler::AssembleDataProcessingInstruction(SourceLine& source, uint32_t o
 auto Assembler::AssembleDataProcessingInstruction(SourceLine& source, DataProcessingInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleDataProcessingInstructionArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('S')) {
+        instruction.s = 1u;
+        return AssembleDataProcessingInstructionArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         if (source.MatchAndAdvance('S')) {
             instruction.s = 1u;
-            return AssembleDataProcessingInstructionArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchAndAdvance('S')) {
-                instruction.s = 1u;
-            }
-            return AssembleDataProcessingInstructionArguments(source, instruction);
         }
+        return AssembleDataProcessingInstructionArguments(source, instruction);
     }
     return false;
 }
@@ -120,9 +119,8 @@ auto Assembler::AssembleDataProcessingInstructionArguments(
     return false;
 }
 
-auto Assembler::AssembleCompareDataProcessingInstruction(SourceLine& source, uint32_t opcode, uint32_t& result) -> bool {
-    DataProcessingInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+auto Assembler::AssembleCompareDataProcessingInstruction(SourceLine& source, const uint32_t opcode, uint32_t& result) -> bool {
+    DataProcessingInstruction instruction {
         .opcode = opcode,
         .s = 1u
     };
@@ -136,23 +134,23 @@ auto Assembler::AssembleCompareDataProcessingInstruction(SourceLine& source, uin
 auto Assembler::AssembleCompareDataProcessingInstruction(SourceLine& source, DataProcessingInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleCompareDataProcessingInstructionArguments(source, instruction);
-    } else {
-        if (source.MatchAndAdvance('P')) {
-            if (source.MatchAndAdvance('L')) {
-                instruction.conditionCode = CONDITION_CODE_PL;
-                if (source.MatchAndAdvance('P')) {
-                    instruction.rd = 15u;
-                }
-            } else {
-                instruction.rd = 15u;
-            }
-            return AssembleCompareDataProcessingInstructionArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
+    }
+    if (source.MatchAndAdvance('P')) {
+        if (source.MatchAndAdvance('L')) {
+            instruction.conditionCode = CONDITION_CODE_PL;
             if (source.MatchAndAdvance('P')) {
                 instruction.rd = 15u;
             }
-            return AssembleCompareDataProcessingInstructionArguments(source, instruction);
+        } else {
+            instruction.rd = 15u;
         }
+        return AssembleCompareDataProcessingInstructionArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
+        if (source.MatchAndAdvance('P')) {
+            instruction.rd = 15u;
+        }
+        return AssembleCompareDataProcessingInstructionArguments(source, instruction);
     }
     return false;
 }
@@ -166,9 +164,8 @@ auto Assembler::AssembleCompareDataProcessingInstructionArguments(
     return false;
 }
 
-auto Assembler::AssembleMoveDataProcessingInstruction(SourceLine& source, uint32_t opcode, uint32_t& result) -> bool {
-    DataProcessingInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+auto Assembler::AssembleMoveDataProcessingInstruction(SourceLine& source, const uint32_t opcode, uint32_t& result) -> bool {
+    DataProcessingInstruction instruction {
         .opcode = opcode
     };
     if (AssembleMoveDataProcessingInstruction(source, instruction)) {
@@ -181,16 +178,16 @@ auto Assembler::AssembleMoveDataProcessingInstruction(SourceLine& source, uint32
 auto Assembler::AssembleMoveDataProcessingInstruction(SourceLine& source, DataProcessingInstruction& instruction) -> bool {
     if (source.MatchWhitespace()) {
         return AssembleMoveDataProcessingInstructionArguments(source, instruction);
-    } else {
+    }
+    if (source.MatchAndAdvance('S')) {
+        instruction.s = 1u;
+        return AssembleMoveDataProcessingInstructionArguments(source, instruction);
+    }
+    if (AssembleConditionCode(source, instruction.conditionCode)) {
         if (source.MatchAndAdvance('S')) {
             instruction.s = 1u;
-            return AssembleMoveDataProcessingInstructionArguments(source, instruction);
-        } else if (AssembleConditionCode(source, instruction.conditionCode)) {
-            if (source.MatchAndAdvance('S')) {
-                instruction.s = 1u;
-            }
-            return AssembleMoveDataProcessingInstructionArguments(source, instruction);
         }
+        return AssembleMoveDataProcessingInstructionArguments(source, instruction);
     }
     return false;
 }

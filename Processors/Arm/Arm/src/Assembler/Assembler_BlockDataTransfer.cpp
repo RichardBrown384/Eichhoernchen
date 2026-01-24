@@ -7,14 +7,14 @@
 using namespace rbrown::arm;
 
 struct Assembler::BlockDataTransferInstruction {
-    uint32_t conditionCode;
-    uint32_t p;
-    uint32_t u;
-    uint32_t s;
-    uint32_t w;
-    uint32_t l;
-    uint32_t rn;
-    uint32_t registerList;
+    uint32_t conditionCode{CONDITION_CODE_AL};
+    uint32_t p{};
+    uint32_t u{};
+    uint32_t s{};
+    uint32_t w{};
+    uint32_t l{};
+    uint32_t rn{};
+    uint32_t registerList{};
 };
 
 auto Assembler::AssembleLdm(SourceLine& source, uint32_t& result) -> bool {
@@ -26,8 +26,7 @@ auto Assembler::AssembleStm(SourceLine& source, uint32_t& result) -> bool {
 }
 
 auto Assembler::AssembleLoadBlockDataTransferInstruction(SourceLine& source, uint32_t& result) -> bool {
-    BlockDataTransferInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL,
+    BlockDataTransferInstruction instruction{
         .l = 1u
     };
     if (AssembleBlockDataTransferInstruction(source, instruction)) {
@@ -38,10 +37,7 @@ auto Assembler::AssembleLoadBlockDataTransferInstruction(SourceLine& source, uin
 }
 
 auto Assembler::AssembleStoreBlockDataTransferInstruction(SourceLine& source, uint32_t& result) -> bool {
-    BlockDataTransferInstruction instruction = {
-        .conditionCode = CONDITION_CODE_AL
-    };
-    if (AssembleBlockDataTransferInstruction(source, instruction)) {
+    if (BlockDataTransferInstruction instruction {}; AssembleBlockDataTransferInstruction(source, instruction)) {
         result = EncodeBlockDataTransferInstruction(instruction);
         return true;
     }
@@ -78,12 +74,11 @@ auto Assembler::AssembleBlockDataTransferIncrement(SourceLine& source, BlockData
         if (source.MatchAndAdvance('A')) {
             instruction.u = 1u;
             return true;
-        } else {
-            if (source.MatchAndAdvance('B')) {
-                instruction.u = 1u;
-                instruction.p = 1u;
-                return true;
-            }
+        }
+        if (source.MatchAndAdvance('B')) {
+            instruction.u = 1u;
+            instruction.p = 1u;
+            return true;
         }
     }
     return false;
@@ -93,11 +88,10 @@ auto Assembler::AssembleBlockDataTransferDecrement(SourceLine& source, BlockData
     if (source.MatchAndAdvance('D')) {
         if (source.MatchAndAdvance('A')) {
             return true;
-        } else {
-            if (source.MatchAndAdvance('B')) {
-                instruction.p = 1u;
-                return true;
-            }
+        }
+        if (source.MatchAndAdvance('B')) {
+            instruction.p = 1u;
+            return true;
         }
     }
     return false;
@@ -143,10 +137,9 @@ auto Assembler::AssembleBlockDataTransferRegisterList(SourceLine& source, uint32
 }
 
 auto Assembler::AssembleBlockDataTransferRegisterRange(SourceLine& source, uint32_t& registerList) -> bool {
-    uint32_t start, end;
-    if (AssembleRegisterNumber(source, start)) {
+    if (uint32_t start; AssembleRegisterNumber(source, start)) {
         if (source.MatchAndAdvance('-')) {
-            if (AssembleRegisterNumber(source, end)) {
+            if (uint32_t end; AssembleRegisterNumber(source, end)) {
                 if (start < end) {
                     registerList |= (1u << (end + 1u)) - (1u << start);
                     return true;
