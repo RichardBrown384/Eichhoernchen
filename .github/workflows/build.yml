@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [ macos-latest, windows-latest ]
 
     steps:
       - name: Checkout code
@@ -25,6 +25,9 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v2
         with:
           cmake-version: '3.31.9'
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
 
       - name: Set up compiler (MSVC)
         if: runner.os == 'Windows'
@@ -43,7 +46,7 @@ jobs:
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build (CMake)
-        run: | 
+        run: |
           cd build
           cmake --build . --parallel
 
@@ -52,24 +55,32 @@ jobs:
           cd build
           ctest --output-on-failure
 
-      - name: Package build output
-        if: startsWith(github.ref, 'refs/tags/v')  # Only for releases
+      - name: Package build output (Mac)
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'macOS'
         run: |
           cd build
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            powershell Compress-Archive -Path * -DestinationPath ../Eichhoernchen-${{ runner.os }}.zip
-          else
-            zip -r ../Eichhoernchen-${{ runner.os }}.zip .
-          fi
+          zip -r ../Eichhoernchen-${{ runner.os }}.zip .
 
-      - name: Upload artifact (for debugging or release)
+      - name: Package build output (Windows)
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd build
+          Compress-Archive -Path * -DestinationPath ../Eichhoernchen-${{ runner.os }}.zip
+
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
+          name: test-results-${{ runner.os }}
+          path: build/Testing/**/Test.xml
+
+      - name: Upload release artifact
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
           name: Eichhoernchen-${{ runner.os }}
-          path: |
-            Eichhoernchen-${{ runner.os }}.zip
-            build/Testing/**/Test.xml
+          path: Eichhoernchen-${{ runner.os }}.zip
 
   release:
     name: Create GitHub Release
@@ -87,5 +98,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/Eichhoernchen-*.zip
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
