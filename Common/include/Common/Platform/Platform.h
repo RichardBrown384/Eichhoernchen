@@ -1,8 +1,9 @@
 #pragma once
 
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace rbrown::platform {
 
