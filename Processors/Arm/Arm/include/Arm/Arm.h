@@ -102,8 +102,8 @@ private:
 
     auto IncrementPC() -> void;
 
-    auto DeconstructPSR(uint32_t) -> void;
-    [[nodiscard]] auto ReconstructPSR() const -> uint32_t;
+    auto SetPSR(uint32_t) -> void;
+    [[nodiscard]] auto GetPSR() const -> uint32_t;
 
     [[nodiscard]] auto TestCondition(uint32_t instruction) const -> bool;
 
@@ -203,13 +203,7 @@ private:
     std::array<uint32_t, 27> regs;
 
     uint32_t pc;
-    uint32_t psrMode;
-    bool psrN;
-    bool psrZ;
-    bool psrC;
-    bool psrV;
-    bool psrI;
-    bool psrF;
+    uint32_t psr;
 };
 
 }

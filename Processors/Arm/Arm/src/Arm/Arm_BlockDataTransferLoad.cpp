@@ -167,7 +167,7 @@ auto Arm::ExecuteBlockDataTransferLoad(uint32_t instruction) -> void {
     CycleI();
     if (IsPC(previous)) {
         if (psrBit) {
-            DeconstructPSR(value);
+            SetPSR(value);
         }
         Branch(value);
     } else if (previous < 15u) {
