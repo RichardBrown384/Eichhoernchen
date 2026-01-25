@@ -15,10 +15,12 @@ constexpr auto PSR_FLAG_C = 0x20000000u;
 constexpr auto PSR_FLAG_V = 0x10000000u;
 constexpr auto PSR_FLAG_I = 0x08000000u;
 constexpr auto PSR_FLAG_F = 0x04000000u;
+constexpr auto PSR_FLAG_SHIFT = 28u;
 
-constexpr auto PSR_MASK_FLAGS = 0xFC000000u;
 constexpr auto PSR_MASK_PC = 0x03FFFFFCu;
 constexpr auto PSR_MASK_MODE = 0x00000003u;
+constexpr auto PSR_MASK_USER = 0xF0000000u;
+constexpr auto PSR_MASK_PRIV = 0xFC000000u;
 
 constexpr auto VECTOR_RESET = 0x00u;
 constexpr auto VECTOR_UNDEFINED_INSTRUCTION = 0x04u;
@@ -30,6 +32,52 @@ constexpr auto VECTOR_IRQ = 0x18u;
 constexpr auto VECTOR_FIQ = 0x1Cu;
 
 constexpr auto INSTRUCTION_NOOP = 0xE1A00000; // MOV R0, R0
+
+constexpr auto TestCondition(const uint32_t psr, const uint32_t condition) -> bool {
+    const auto n = (psr & PSR_FLAG_N) != 0u;
+    const auto z = (psr & PSR_FLAG_Z) != 0u;
+    const auto c = (psr & PSR_FLAG_C) != 0u;
+    const auto v = (psr & PSR_FLAG_V) != 0u;
+    switch (condition) {
+        case CONDITION_CODE_EQ: return z;
+        case CONDITION_CODE_NE: return !z;
+        case CONDITION_CODE_CS: return c;
+        case CONDITION_CODE_CC: return !c;
+        case CONDITION_CODE_MI: return n;
+        case CONDITION_CODE_PL: return !n;
+        case CONDITION_CODE_VS: return v;
+        case CONDITION_CODE_VC: return !v;
+        case CONDITION_CODE_HI: return (c && !z);
+        case CONDITION_CODE_LS: return !(c && !z);
+        case CONDITION_CODE_GE: return n == v;
+        case CONDITION_CODE_LT: return n != v;
+        case CONDITION_CODE_GT: return (!z && (n == v));
+        case CONDITION_CODE_LE: return !(!z && (n == v));
+        case CONDITION_CODE_AL: return true;
+            [[unlikely]] default: return false;
+    }
+}
+
+consteval auto GenerateConditionTable() -> std::array<uint16_t, 8> {
+    std::array<uint16_t, 8> table{};
+    for (auto condition = 0u; condition < 16u; condition += 2) {
+        auto entry = 0u;
+        for (auto psr = 0u; psr < 16u; ++psr) {
+            if (TestCondition(psr << PSR_FLAG_SHIFT, condition)) {
+                entry += 1u << psr;
+            }
+        }
+        table[condition >> 1u] = entry;
+    }
+    return table;
+}
+
+constexpr auto CONDITION_LOOKUP_TABLE = GenerateConditionTable();
+
+constexpr auto TestConditionWithLookup(const uint32_t psr, const uint32_t condition) -> bool {
+    const auto entry = CONDITION_LOOKUP_TABLE[condition >> 1u];
+    return ((entry >> psr) ^ condition) & 1u;
+}
 
 constexpr auto MapRegisterByMode(const uint32_t mode, const uint32_t r) -> uint32_t {
     if (r < 8u) {
@@ -49,36 +97,31 @@ Arm::Arm(Memory& mem, Interrupts& interrupts) :
     interrupts { interrupts },
     decode { .instruction = INSTRUCTION_NOOP, .prefetchAbort = false },
     fetch { .instruction = INSTRUCTION_NOOP, .prefetchAbort = false },
-    regs { 0 },
+    regs { },
     pc { VECTOR_RESET },
-    psrMode { PSR_MODE_SVC },
-    psrN { false },
-    psrZ { false },
-    psrC { false },
-    psrV { false },
-    psrI { true },
-    psrF { true } {}
+    psr { PSR_FLAG_I + PSR_FLAG_F + PSR_MODE_SVC } {}
 
 auto Arm::SetRegister(uint32_t mode, uint32_t r, uint32_t v) -> void { regs[MapRegisterByMode(mode, r)] = v; }
 auto Arm::SetPC(uint32_t v) -> void { pc = v & PSR_MASK_PC; }
 auto Arm::SetMode(uint32_t m) -> void{
-    psrMode = m & PSR_MASK_MODE;
-    SetTransPin(psrMode != PSR_MODE_USR);
+    psr &= ~PSR_MASK_MODE;
+    psr |= m & PSR_MASK_MODE;
+    SetTransPin(GetMode() != PSR_MODE_USR);
 }
 
-auto Arm::SetN(bool v) -> void { psrN = v; }
-auto Arm::SetZ(bool v) -> void { psrZ = v; }
-auto Arm::SetC(bool v) -> void { psrC = v; }
-auto Arm::SetV(bool v) -> void { psrV = v; }
-auto Arm::SetI(bool v) -> void { psrI = v; }
-auto Arm::SetF(bool v) -> void { psrF = v; }
+auto Arm::SetN(const bool v) -> void { if (v) { psr |= PSR_FLAG_N; } else { psr &= ~PSR_FLAG_N; } }
+auto Arm::SetZ(const bool v) -> void { if (v) { psr |= PSR_FLAG_Z; } else { psr &= ~PSR_FLAG_Z; } }
+auto Arm::SetC(const bool v) -> void { if (v) { psr |= PSR_FLAG_C; } else { psr &= ~PSR_FLAG_C; } }
+auto Arm::SetV(const bool v) -> void { if (v) { psr |= PSR_FLAG_V; } else { psr &= ~PSR_FLAG_V; } }
+auto Arm::SetI(const bool v) -> void { if (v) { psr |= PSR_FLAG_I; } else { psr &= ~PSR_FLAG_I; } }
+auto Arm::SetF(const bool v) -> void { if (v) { psr |= PSR_FLAG_F; } else { psr &= ~PSR_FLAG_F; } }
 
 auto Arm::SetDecodedInstruction(uint32_t v) -> void { decode.instruction = v; decode.prefetchAbort = false; }
 auto Arm::SetFetchedInstruction(uint32_t v) -> void { fetch.instruction = v; fetch.prefetchAbort = false; }
 
 auto Arm::GetRegister(uint32_t mode, uint32_t r) const -> uint32_t { return regs[MapRegisterByMode(mode, r)]; }
 auto Arm::GetPC() const -> uint32_t { return pc; }
-auto Arm::GetMode() const -> uint32_t { return psrMode; }
+auto Arm::GetMode() const -> uint32_t { return psr & PSR_MASK_MODE; }
 
 auto Arm::GetRegisterWithoutPSR(uint32_t mode, uint32_t r) const -> uint32_t {
     if (IsPC(r)) {
@@ -89,21 +132,21 @@ auto Arm::GetRegisterWithoutPSR(uint32_t mode, uint32_t r) const -> uint32_t {
 
 auto Arm::GetRegisterWithPSR(uint32_t mode, uint32_t r) const -> uint32_t {
     if (IsPC(r)) {
-        return GetPC() + ReconstructPSR();
+        return GetPC() + GetPSR();
     }
     return GetRegister(mode, r);
 }
 
-auto Arm::GetN() const -> bool { return psrN; }
-auto Arm::GetZ() const -> bool { return psrZ; }
-auto Arm::GetC() const -> bool { return psrC; }
-auto Arm::GetV() const -> bool { return psrV; }
-auto Arm::GetI() const -> bool { return psrI; }
-auto Arm::GetF() const -> bool { return psrF; }
+auto Arm::GetN() const -> bool { return psr & PSR_FLAG_N; }
+auto Arm::GetZ() const -> bool { return psr & PSR_FLAG_Z; }
+auto Arm::GetC() const -> bool { return psr & PSR_FLAG_C; }
+auto Arm::GetV() const -> bool { return psr & PSR_FLAG_V; }
+auto Arm::GetI() const -> bool { return psr & PSR_FLAG_I; }
+auto Arm::GetF() const -> bool { return psr & PSR_FLAG_F; }
 
 auto Arm::GetDecodedInstruction() const -> uint32_t { return decode.instruction; }
 
-auto Arm::TransferAddressIsInvalid(uint32_t v) -> bool { return v & PSR_MASK_FLAGS; }
+auto Arm::TransferAddressIsInvalid(uint32_t v) -> bool { return v & PSR_MASK_PRIV; }
 auto Arm::IsPC(uint32_t v) -> bool { return v == REGISTER_R15; }
 
 auto Arm::GetMemory() -> Memory& { return memory; }
@@ -121,53 +164,23 @@ auto Arm::CycleI(uint32_t n) -> void { return GetMemory().CycleI(n); }
 
 auto Arm::IncrementPC() -> void { SetPC(GetPC() + 4u); }
 
-auto Arm::DeconstructPSR(uint32_t v) -> void {
-    SetN(v & PSR_FLAG_N);
-    SetZ(v & PSR_FLAG_Z);
-    SetC(v & PSR_FLAG_C);
-    SetV(v & PSR_FLAG_V);
-    if (GetMode() != PSR_MODE_USR) {
-        SetI(v & PSR_FLAG_I);
-        SetF(v & PSR_FLAG_F);
-        SetMode(v);
+auto Arm::SetPSR(uint32_t v) -> void {
+    if (GetMode() == PSR_MODE_USR) {
+        psr &= ~PSR_MASK_USER;
+        psr |= v & PSR_MASK_USER;
+        return;
     }
+    psr &= ~PSR_MASK_PRIV;
+    psr |= v & PSR_MASK_PRIV;
+    SetMode(v);
 }
 
-auto Arm::ReconstructPSR() const -> uint32_t {
-    auto psr = 0u;
-    if (GetN()) psr |= PSR_FLAG_N;
-    if (GetZ()) psr |= PSR_FLAG_Z;
-    if (GetC()) psr |= PSR_FLAG_C;
-    if (GetV()) psr |= PSR_FLAG_V;
-    if (GetI()) psr |= PSR_FLAG_I;
-    if (GetF()) psr |= PSR_FLAG_F;
-    psr |= GetMode();
+auto Arm::GetPSR() const -> uint32_t {
     return psr;
 }
 
-auto Arm::TestCondition(uint32_t instruction) const -> bool {
-    const auto n = GetN();
-    const auto z = GetZ();
-    const auto c = GetC();
-    const auto v = GetV();
-    switch (InstructionConditionCode(instruction)) {
-        case CONDITION_CODE_EQ: return z;
-        case CONDITION_CODE_NE: return !z;
-        case CONDITION_CODE_CS: return c;
-        case CONDITION_CODE_CC: return !c;
-        case CONDITION_CODE_MI: return n;
-        case CONDITION_CODE_PL: return !n;
-        case CONDITION_CODE_VS: return v;
-        case CONDITION_CODE_VC: return !v;
-        case CONDITION_CODE_HI: return (c && !z);
-        case CONDITION_CODE_LS: return !(c && !z);
-        case CONDITION_CODE_GE: return n == v;
-        case CONDITION_CODE_LT: return n != v;
-        case CONDITION_CODE_GT: return (!z && (n == v));
-        case CONDITION_CODE_LE: return !(!z && (n == v));
-        case CONDITION_CODE_AL: return true;
-            [[unlikely]] default: return false;
-    }
+auto Arm::TestCondition(const uint32_t instruction) const -> bool {
+    return TestConditionWithLookup(GetPSR() >> PSR_FLAG_SHIFT, InstructionConditionCode(instruction));
 }
 
 auto Arm::ReadByte(uint32_t address, uint32_t& value) -> bool {
@@ -212,8 +225,7 @@ auto Arm::Branch(uint32_t target) -> void {
 
 auto Arm::GetBranchLinkValue() const -> uint32_t {
     const auto address = (GetPC() - 4u) & PSR_MASK_PC;
-    const auto psr = ReconstructPSR();
-    return address + psr;
+    return address + GetPSR();
 }
 
 auto Arm::GetBranchTarget(uint32_t instruction) const -> uint32_t {

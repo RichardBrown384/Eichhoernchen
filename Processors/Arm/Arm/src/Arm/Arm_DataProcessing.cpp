@@ -1,8 +1,6 @@
-#include <cstdint>
+#include "Arm/Arm.h"
 
 #include "Common/Decode.h"
-
-#include "Arm/Arm.h"
 
 using namespace rbrown::arm;
 
@@ -21,7 +19,7 @@ void Arm::ApplyArithmeticOperation(uint32_t instruction, uint32_t op1, uint32_t 
     const auto d = InstructionRegisterRd(instruction);
     if (IsPC(d)) {
         if (psrBit) {
-            DeconstructPSR(result);
+            SetPSR(result);
         }
         Branch(result);
         return;
@@ -37,7 +35,7 @@ void Arm::ApplyArithmeticCompareOperation(uint32_t instruction, uint32_t op1, ui
     const auto d = InstructionRegisterRd(instruction);
     if (psrBit) {
         if (IsPC(d)) {
-            DeconstructPSR(result);
+            SetPSR(result);
             return;
         }
         ApplyArithmeticFlags(op1, op2, result);
@@ -55,7 +53,7 @@ void Arm::ApplyLogicalOperation(uint32_t instruction, uint32_t result, uint32_t 
     const auto d = InstructionRegisterRd(instruction);
     if (IsPC(d)) {
         if (psrBit) {
-            DeconstructPSR(result);
+            SetPSR(result);
         }
         Branch(result);
         return;
@@ -71,7 +69,7 @@ void Arm::ApplyLogicalCompareOperation(uint32_t instruction, uint32_t result, ui
     const auto d = InstructionRegisterRd(instruction);
     if (psrBit) {
         if (IsPC(d)) {
-            DeconstructPSR(result);
+            SetPSR(result);
             return;
         }
         ApplyLogicalFlags(result, carry);
