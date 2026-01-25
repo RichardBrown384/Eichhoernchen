@@ -15,6 +15,7 @@ constexpr auto PSR_FLAG_C = 0x20000000u;
 constexpr auto PSR_FLAG_V = 0x10000000u;
 constexpr auto PSR_FLAG_I = 0x08000000u;
 constexpr auto PSR_FLAG_F = 0x04000000u;
+constexpr auto PSR_FLAG_SHIFT = 28u;
 
 constexpr auto PSR_MASK_FLAGS = 0xFC000000u;
 constexpr auto PSR_MASK_PC = 0x03FFFFFCu;
@@ -30,6 +31,52 @@ constexpr auto VECTOR_IRQ = 0x18u;
 constexpr auto VECTOR_FIQ = 0x1Cu;
 
 constexpr auto INSTRUCTION_NOOP = 0xE1A00000; // MOV R0, R0
+
+constexpr auto TestCondition(const uint32_t psr, const uint32_t condition) -> bool {
+    const auto n = (psr & PSR_FLAG_N) != 0u;
+    const auto z = (psr & PSR_FLAG_Z) != 0u;
+    const auto c = (psr & PSR_FLAG_C) != 0u;
+    const auto v = (psr & PSR_FLAG_V) != 0u;
+    switch (condition) {
+        case CONDITION_CODE_EQ: return z;
+        case CONDITION_CODE_NE: return !z;
+        case CONDITION_CODE_CS: return c;
+        case CONDITION_CODE_CC: return !c;
+        case CONDITION_CODE_MI: return n;
+        case CONDITION_CODE_PL: return !n;
+        case CONDITION_CODE_VS: return v;
+        case CONDITION_CODE_VC: return !v;
+        case CONDITION_CODE_HI: return (c && !z);
+        case CONDITION_CODE_LS: return !(c && !z);
+        case CONDITION_CODE_GE: return n == v;
+        case CONDITION_CODE_LT: return n != v;
+        case CONDITION_CODE_GT: return (!z && (n == v));
+        case CONDITION_CODE_LE: return !(!z && (n == v));
+        case CONDITION_CODE_AL: return true;
+            [[unlikely]] default: return false;
+    }
+}
+
+consteval auto GenerateConditionTable() -> std::array<uint16_t, 8> {
+    std::array<uint16_t, 8> table{};
+    for (auto condition = 0u; condition < 16u; condition += 2) {
+        auto entry = 0u;
+        for (auto psr = 0u; psr < 16u; ++psr) {
+            if (TestCondition(psr << PSR_FLAG_SHIFT, condition)) {
+                entry += 1u << psr;
+            }
+        }
+        table[condition >> 1u] = entry;
+    }
+    return table;
+}
+
+constexpr auto CONDITION_LOOKUP_TABLE = GenerateConditionTable();
+
+constexpr auto TestConditionWithLookup(const uint32_t psr, const uint32_t condition) -> bool {
+    const auto entry = CONDITION_LOOKUP_TABLE[condition >> 1u];
+    return ((entry >> psr) ^ condition) & 1u;
+}
 
 constexpr auto MapRegisterByMode(const uint32_t mode, const uint32_t r) -> uint32_t {
     if (r < 8u) {
@@ -145,29 +192,8 @@ auto Arm::ReconstructPSR() const -> uint32_t {
     return psr;
 }
 
-auto Arm::TestCondition(uint32_t instruction) const -> bool {
-    const auto n = GetN();
-    const auto z = GetZ();
-    const auto c = GetC();
-    const auto v = GetV();
-    switch (InstructionConditionCode(instruction)) {
-        case CONDITION_CODE_EQ: return z;
-        case CONDITION_CODE_NE: return !z;
-        case CONDITION_CODE_CS: return c;
-        case CONDITION_CODE_CC: return !c;
-        case CONDITION_CODE_MI: return n;
-        case CONDITION_CODE_PL: return !n;
-        case CONDITION_CODE_VS: return v;
-        case CONDITION_CODE_VC: return !v;
-        case CONDITION_CODE_HI: return (c && !z);
-        case CONDITION_CODE_LS: return !(c && !z);
-        case CONDITION_CODE_GE: return n == v;
-        case CONDITION_CODE_LT: return n != v;
-        case CONDITION_CODE_GT: return (!z && (n == v));
-        case CONDITION_CODE_LE: return !(!z && (n == v));
-        case CONDITION_CODE_AL: return true;
-            [[unlikely]] default: return false;
-    }
+auto Arm::TestCondition(const uint32_t instruction) const -> bool {
+    return TestConditionWithLookup(ReconstructPSR() >> PSR_FLAG_SHIFT, InstructionConditionCode(instruction));
 }
 
 auto Arm::ReadByte(uint32_t address, uint32_t& value) -> bool {
