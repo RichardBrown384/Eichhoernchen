@@ -50,7 +50,7 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          ctest --output-on-failure -C debug
+          ctest --output-on-failure
 
       - name: Package build output
         if: startsWith(github.ref, 'refs/tags/v')  # Only for releases
